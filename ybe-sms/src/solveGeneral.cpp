@@ -27,8 +27,8 @@ bool CommonInterface::propagate()
     printPartiallyDefinedCycleSet(matrix);
   }
 
-  //res = checkMin();
-  res = true;
+  res = checkMin();
+  //res = true;
   
   stats.timePropagator += clock() - start;
   return res;

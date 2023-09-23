@@ -89,15 +89,7 @@ int main(int argc, char const **argv)
     fflush(stdout);
     //printCnf(&cnf);
 
-    CommonInterface *solver;
-
-    printf("SAT Solver: Cadical\n");
-    int highestVariable = 0;
-    for (auto clause : cnf)
-    {
-        for (auto lit : clause)
-            highestVariable = max(highestVariable, abs(lit));
-    }
+    
 
     vector<int> toPart;
     vector<vector<int>> parts;
@@ -114,10 +106,33 @@ int main(int argc, char const **argv)
     
     // SOLVE PER DIAGONAL
 
-    solver = new CadicalSolver(cnf, highestVariable);
+    clause_t cl;
+    //for(auto d : diags)
+    //{
+        CommonInterface *solver;
+        cnf_t c = cnf_t(cnf.begin(),cnf.end());
+        for(int i=0; i<diags[0].size(); i++)
+        {
+            cl.push_back(cycset_lits[i][i][d[i]]);
+            printf("%d,", d[i]);
+            c.push_back(cl);
+            cl.clear();
+        }
+        
 
-    solver->solve();
+        printf("SAT Solver: Cadical\n");
+        int highestVariable = 0;
+        for (auto clause : c)
+        {
+            for (auto lit : clause)
+                highestVariable = max(highestVariable, abs(lit));
+        }
 
-    printf("Total time: %f\n", ((double)clock() - stats.start) / CLOCKS_PER_SEC);
+        solver = new CadicalSolver(c, highestVariable);
+
+        solver->solve();
+
+        printf("Total time: %f\n", ((double)clock() - stats.start) / CLOCKS_PER_SEC);
+    //}
     return 0;
 }

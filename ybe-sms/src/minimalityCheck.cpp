@@ -6,6 +6,7 @@
 void checkMinimality(cycle_set_t &cycset)
 {
     printf("MINCHECK CALL\n");
+    printPartiallyDefinedCycleSet(cycset);
     vector<tuple<int,int,int>> ordered_vars;
     for(int i=0; i<size;i++)
         for(int j=0; j<size; j++)
@@ -30,10 +31,6 @@ void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int
             vector<int> p = vector<int>(perm.begin(),perm.end());
             vector<int> toPerm = vector<int>(toPermute.begin(),toPermute.end());
             p.push_back(toPerm[i]);
-            printf("perm= ");
-            for(int k:p)
-                printf("%d,",k);    
-            printf("\n");
             toPerm.erase(toPerm.begin()+i);
             if(permSmaller(p, vars, cycset))
             {
@@ -46,12 +43,6 @@ void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int
             }
         }
     }
-    /* else
-    {
-        for(int p:perm)
-            printf("%d,",p);    
-        printf("\n");
-    } */
 }
 
 bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> vars, cycle_set_t &cycset)
@@ -71,41 +62,24 @@ bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> vars, cycle_set_t 
             else
                 permed_vars.push_back(make_tuple(-1,-1,-1));
     }
+    else
+    {
+        for(auto t : vars)
+            permed_vars.push_back(make_tuple(invperm[get<0>(t)],invperm[get<1>(t)],invperm[get<2>(t)]));
+    }
     
     for(size_t i=0, max=permed_vars.size(); i<max; i++)
     {
         truth_vals og_asg = cycset.assignments[get<0>(vars[i])][get<1>(vars[i])][get<2>(vars[i])];
         truth_vals perm_asg;
         //printf("START COMPARING\n");
-        //printf("%d , OG\n", og_asg);
         if(get<0>(permed_vars[i])!=-1)
             perm_asg = cycset.assignments[get<0>(permed_vars[i])][get<1>(permed_vars[i])][get<2>(permed_vars[i])];
         else
             perm_asg = Unknown_t;
-        //printf("%d , perm\n", perm_asg);
         if((og_asg == True_t && perm_asg==False_t) || (og_asg == True_t && perm_asg==Unknown_t) || (og_asg == Unknown_t && perm_asg==False_t))
             {
                 printf("PERM SMALLER\n");
-                printf("OG\n");
-                for(auto c : vars)
-                    printf("M_%d,%d,%d ", get<0>(c),get<1>(c),get<2>(c));
-                printf("\n");
-                for(auto c : vars)
-                    if(cycset.assignments[get<0>(c)][get<1>(c)][get<2>(c)]!=-1)
-                        printf("%d ", cycset.assignments[get<0>(c)][get<1>(c)][get<2>(c)]);
-                    else
-                        printf("* ");
-                printf("\n");
-                printf("SYMM\n");
-                for(auto c : permed_vars)
-                    printf("M_%d,%d,%d ", get<0>(c),get<1>(c),get<2>(c));
-                printf("\n");
-                for(auto c : permed_vars)
-                    if(get<0>(c)!=-1 && get<1>(c)!=-1 && get<2>(c)!=-1 && cycset.assignments[get<0>(c)][get<1>(c)][get<2>(c)]!=-1)
-                        printf("%d ", cycset.assignments[get<0>(c)][get<1>(c)][get<2>(c)]);
-                    else
-                        printf("* ");
-                printf("\n");
                 return 1;
             }
         if((og_asg == False_t && perm_asg==True_t))
