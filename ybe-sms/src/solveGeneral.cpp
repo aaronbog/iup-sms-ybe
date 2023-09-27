@@ -1,9 +1,6 @@
 /**
  * Implementation of common parts amongst all solvers
  */
-#include <boost/graph/boyer_myrvold_planar_test.hpp>
-#include <boost/graph/is_kuratowski_subgraph.hpp>
-#include <boost/graph/adjacency_list.hpp>
 #include "useful.h"
 #include "global.h"
 #include "solve.h"
