@@ -2,8 +2,7 @@ This is the supplementary material of the submission "IPASIR-UP: User
 Propagators for CDCL" to SAT'23. It contains supplement regarding the following
 tools:
 (1) CaDiCaL with IPASIRUP
-(2) SAT modulo Symmetries (SMS) solver
-(3) cvc5 - Satisfiability modulo Theories (SMT) solver
+(2) SAT modulo Symmetries (SMS) solver for YBE Problem
 
 0. Unzip the three included zip files into one folder.
 
@@ -27,27 +26,19 @@ more details and build instructions.
 - The ExternalPropagator interface can be found here:
     'cadical-user-propagation/src/cadical.hpp' in lines 976-1030.
 
-2. SAT modulo Symmetries
+2. ybe-sms
 -------------------------
-This version of SMS requires clingo to be installed. For instructions on how to
-setup clingo, check out the 'sms-cpp-impl/README.md' file. After that, to build
-SMS with CaDiCaL first follow the steps of (1) and then run:
+To build ybe-sms with CaDiCaL first follow the steps of (1) and then run:
 
-    cd sms-cpp-impl/
-    ./buildScript.sh
+    cd ybe-sms/
+    cmake . -B./build
+    cd build
+    make
 
-For the details on how to execute the experiments reported in the paper, see the
-description in 'sms-cpp-impl/README.md'.
+The executable can be found in the folder build/src 
+    
+
+
 
 - The implementation of the ExternalPropagator class is in the following file:
     'sms-cpp-impl/src/solveCadicalClass.hpp'
-
-3. cvc5 with CaDiCaL:
-----------------------
-The version of cvc5 that uses CaDiCaL with IPASIR-UP as the main SAT engine is
-in the folder cvc5-cdclt-cadical.
-It requires CaDiCaL to be installed (run 'make install' in (1)). Then, check out
-'cvc5/INSTALL.rst' for the detailed build and installation instructions of cvc5.
-
-- The implementation of the ExternalPropagator class is in the following file:
-	./cvc5-cdclt-cadical/src/prop/cadical.cpp
