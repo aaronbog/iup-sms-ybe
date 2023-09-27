@@ -11,6 +11,8 @@ class LimitReachedException
  */
 void checkMinimality(cycle_set_t &cycset);
 
-bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> vars, cycle_set_t &cycset);
+bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> &vars, cycle_set_t &cycset);
 
-void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int>> vars, cycle_set_t &cycset);
+void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int>> &vars, cycle_set_t &cycset);
+
+void addClauses(vector<int> perm, vector<tuple<int,int,int>> &vars, vector<tuple<int,int,int>> &permedVars, cycle_set_t &cycset);

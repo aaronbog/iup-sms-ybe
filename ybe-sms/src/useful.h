@@ -11,6 +11,7 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 
 using namespace std;
 
