@@ -8,9 +8,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
 {
     this->highestVariable = highestVariable;
     currentCycleSet = cycle_set_t();
-    currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(size, vector<vector<truth_vals>>(size, vector<truth_vals>(size, Unknown_t)));
-    currentCycleSet.matrix=vector<vector<int>>(size, vector<int>(size, -1));
-    fixedCycleSet = vector<vector<vector<bool>>>(size, vector<vector<bool>>(size, vector<bool>(size, false)));
+    currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
+    currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
+    fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
     // The root-level of the trail is always there
     current_trail.push_back(std::vector<int>());
 
@@ -31,10 +31,10 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
 
     lit2entry.push_back(make_tuple(-1, -1, -1)); // dummy pair for index 0
      
-    highestEdgeVariable = (size*size*size);
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
-            for (int k = 0; k < size; k++)
+    highestEdgeVariable = (problem_size*problem_size*problem_size);
+    for (int i = 0; i < problem_size; i++)
+        for (int j = 0; j < problem_size; j++)
+            for (int k = 0; k < problem_size; k++)
                 lit2entry.push_back(make_tuple(i, j,k));
 
     // add clauses to solver
@@ -52,9 +52,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
         solver->add(0);
     }
 
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
-            for (int k = 0; k < size; k++)
+    for (int i = 0; i < problem_size; i++)
+        for (int j = 0; j < problem_size; j++)
+            for (int k = 0; k < problem_size; k++)
                 solver->add_observed_var(cycset_lits[i][j][k]);
 
     literal2clausePos = vector<vector<int>>(highestEdgeVariable + 1);

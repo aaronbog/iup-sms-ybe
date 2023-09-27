@@ -45,11 +45,11 @@ protected: // virtual classes from common interface
         else
         {
             cycle_set_t cycset;
-            cycset.assignments=vector<vector<vector<truth_vals>>>(size, vector<vector<truth_vals>>(size, vector<truth_vals>(size, Unknown_t)));
-            cycset.matrix=vector<vector<int>>(size, vector<int>(size, -1));
-            for (int i = 0; i < size; i++)
-                for (int j = 0; j < size; j++)
-                    for (int k = 0; k < size; k++)
+            cycset.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
+            cycset.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
+            for (int i = 0; i < problem_size; i++)
+                for (int j = 0; j < problem_size; j++)
+                    for (int k = 0; k < problem_size; k++)
                     {
                         if (solver->val(cycset_lits[i][j][k])>0)
                         {

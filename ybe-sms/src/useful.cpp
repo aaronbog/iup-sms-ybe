@@ -63,7 +63,7 @@ void part(int n, vector<int>& v, int level, vector<vector<int>>& parts){
 void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations)
 {
   vector<vector<vector<int>>> cycles;
-  for(int i = 0; i<parts.size(); i++)
+  for(size_t i = 0; i<parts.size(); i++)
   {
     printf("PART: ");
     for(int j : parts[i])
@@ -81,7 +81,7 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
     {
       int toAdd=0;
       vector<vector<int>> cycs;
-      for(int j=0; j<parts[i].size();j++)
+      for(size_t j=0; j<parts[i].size();j++)
       {
         for(int k=0; k<parts[i][j]; k++)
         {
@@ -99,11 +99,11 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
   vector<int> perm=vector<int>();
   for(auto part : cycles)
   {
-    for(int j=0; j<size; j++)
+    for(int j=0; j<problem_size; j++)
       perm.push_back(j);
     for(auto p : part)
     {
-      for(int i = 0; i<p.size()-1; i++)
+      for(size_t i = 0; i<p.size()-1; i++)
         perm[p[i]]=p[i+1];
       perm[p[p.size()-1]]=p[0];
     }

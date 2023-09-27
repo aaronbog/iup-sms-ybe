@@ -7,9 +7,9 @@ void checkMinimality(cycle_set_t &cycset)
     printf("MINCHECK CALL\n");
     printPartiallyDefinedCycleSet(cycset);
     vector<tuple<int,int,int>> ordered_vars;
-    for(int i=0; i<size;i++)
-        for(int j=0; j<size; j++)
-            for(int l=size-1; l>=0; l--)
+    for(int i=0; i<problem_size;i++)
+        for(int j=0; j<problem_size; j++)
+            for(int l=problem_size-1; l>=0; l--)
                 ordered_vars.push_back(make_tuple(i,j,l));
 
     
@@ -17,15 +17,15 @@ void checkMinimality(cycle_set_t &cycset)
     vector<int> perm;
     vector<int> toPerm;
     
-    for(int i=size-1, j=0; i>j; i--, j++)
+    for(int i=problem_size-1, j=0; i>j; i--, j++)
             {toPerm.push_back(j);
             toPerm.push_back(i);}
     
-    if(size%2!=0)
-        toPerm.push_back(int(size/2));
+    if(problem_size%2!=0)
+        toPerm.push_back(int(problem_size/2));
         
     printf("To Permute:");
-    for(int i=0; i<toPerm.size();i++)
+    for(size_t i=0; i<toPerm.size();i++)
         printf("%d,",toPerm[i]);
     printf("\n");
 
@@ -36,7 +36,7 @@ void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int
 {
     if(toPermute.size()!=0)
     {
-        for(int i = 0; i<toPermute.size(); i++)
+        for(size_t i = 0; i<toPermute.size(); i++)
         {
             vector<int> p = vector<int>(perm.begin(),perm.end());
             vector<int> toPerm = vector<int>(toPermute.begin(),toPermute.end());
@@ -58,22 +58,22 @@ void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int
 bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> &vars, cycle_set_t &cycset)
 {
     unordered_set<int> unused=unordered_set<int>();
-    for(int i=0;i<size;i++)
+    for(int i=0;i<problem_size;i++)
         unused.insert(i);
-    for(int i=0;i<perm.size();i++)
+    for(size_t i=0;i<perm.size();i++)
         unused.erase(perm[i]);
 
-    while(perm.size()<size)
+    while(perm.size()<size_t(problem_size))
         perm.insert(perm.begin(), -1);
 
-    vector<int> invperm(size, -1);
-    for(size_t i=0; i<size; i++)
+    vector<int> invperm(problem_size, -1);
+    for(int i=0; i<problem_size; i++)
         if(perm[i]!=-1)
             invperm[perm[i]]=i;
     
     vector<tuple<int,int,int>> permed_vars;
     printf("Perm:");
-    for(int i=0; i<perm.size();i++){
+    for(size_t i=0; i<perm.size();i++){
         printf("%d,",perm[i]);
     }
     printf("\n");
@@ -127,7 +127,7 @@ bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> &vars, cycle_set_t
         
         if((og_asg == True_t && perm_asg==False_t) || (og_asg == True_t && perm_asg==Unknown_t) || (og_asg == Unknown_t && perm_asg==False_t))
             {
-                if(perm.size()<size)
+                if(perm.size()<size_t(problem_size))
                     {printf("EXTENDING PERM");
                     for(auto itr = unused.begin(); itr != unused.end(); itr++)
                         perm.push_back(*itr);}

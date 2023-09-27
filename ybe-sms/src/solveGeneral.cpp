@@ -76,9 +76,9 @@ bool CommonInterface::check()
     // exclude current graph
     cycle_set_t &cs = cycset;
     vector<lit_t> clause;
-    for (int i = 0; i < size; i++)
-      for (int j = 0; j < size; j++)
-        for (int k = 0; k < size; k++)
+    for (int i = 0; i < problem_size; i++)
+      for (int j = 0; j < problem_size; j++)
+        for (int k = 0; k < problem_size; k++)
         {
           if (cs.assignments[i][j][k] == True_t){
             clause.push_back(-cycset_lits[i][j][k]);

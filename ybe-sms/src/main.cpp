@@ -8,7 +8,7 @@
 #include <iterator>
 
 int nextFreeVariable;
-int size;
+int problem_size;
 vector<vector<vector<lit_t>>> cycset_lits;
 vector<vector<lit_t>> ybe_left_lits;
 vector<vector<lit_t>> ybe_right_lits;
@@ -32,7 +32,7 @@ int main(int argc, char const **argv)
         if (strcmp("--size", argv[i]) == 0 || strcmp("-s", argv[i]) == 0)
         {
             i++;
-            size = atoi(argv[i]);
+            problem_size = atoi(argv[i]);
             continue;
         }
 
@@ -47,26 +47,26 @@ int main(int argc, char const **argv)
     nextFreeVariable = 1;
 
     // create new variables
-    cycset_lits = vector<vector<vector<lit_t>>>(size, vector<vector<lit_t>>(size, vector<lit_t>(size, 0)));    
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
-            for (int k = 0; k < size; k++)
+    cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));    
+    for (int i = 0; i < problem_size; i++)
+        for (int j = 0; j < problem_size; j++)
+            for (int k = 0; k < problem_size; k++)
                 cycset_lits[i][j][k] = nextFreeVariable++;
 
     int t=0;
-    for(int i=0; i<size; i++)
+    for(int i=0; i<problem_size; i++)
         t+=i;
-    t*=size;
+    t*=problem_size;
     
-    ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(size*size, 0));
-    ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(size*size, 0));
-    ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(size, 0));
+    ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
+    ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
+    ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
     
     for (int i = 0; i < t; i++)
-        for (int j = 0; j < size; j++)
+        for (int j = 0; j < problem_size; j++)
             ybe_lits[i][j]=nextFreeVariable++;
     for (int i = 0; i < t; i++)
-        for (int j = 0; j < size*size; j++)
+        for (int j = 0; j < problem_size*problem_size; j++)
         {
             ybe_left_lits[i][j]=nextFreeVariable++;
             ybe_right_lits[i][j]=nextFreeVariable++;
@@ -93,12 +93,12 @@ int main(int argc, char const **argv)
 
     vector<int> toPart;
     vector<vector<int>> parts;
-    for(int i=0; i<size; i++)
+    for(int i=0; i<problem_size; i++)
         toPart.push_back(i);
-    part(size, toPart, 0, parts);
+    part(problem_size, toPart, 0, parts);
     vector<vector<int>> diags;
     vector<int> d;
-    for(int i=0; i<size; i++)
+    for(int i=0; i<problem_size; i++)
         d.push_back(i);
     diags.push_back(d);
     d.clear();
@@ -111,7 +111,7 @@ int main(int argc, char const **argv)
     //{
         CommonInterface *solver;
         cnf_t c = cnf_t(cnf.begin(),cnf.end());
-        for(int i=0; i<diags[0].size(); i++)
+        for(size_t i=0; i<diags[0].size(); i++)
         {
             cl.push_back(cycset_lits[i][i][d[i]]);
             printf("%d,", d[i]);

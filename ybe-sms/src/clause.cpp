@@ -4,24 +4,24 @@
 
 void encodeEntries(cnf_t *cnf)
 {
-    for(int i=0; i<size; i++)
-        for(int j=0; j<size; j++)
+    for(int i=0; i<problem_size; i++)
+        for(int j=0; j<problem_size; j++)
             exactlyOne(cnf, cycset_lits[i][j]);
 
-    for(int i=0; i<size; i++)
-        for(int k=0; k<size; k++)
+    for(int i=0; i<problem_size; i++)
+        for(int k=0; k<problem_size; k++)
         {
             clause_t cl;
-            for(int j=0; j<size; j++)
+            for(int j=0; j<problem_size; j++)
                 cl.push_back(cycset_lits[i][j][k]);
             cnf->push_back(cl);
             cl.clear();
         }
     
-    for(int i=0; i<size; i++)
+    for(int i=0; i<problem_size; i++)
         {
             clause_t cl;
-            for(int j=0; j<size; j++)
+            for(int j=0; j<problem_size; j++)
                 cl.push_back(cycset_lits[j][j][i]);
             cnf->push_back(cl);
             cl.clear();
@@ -165,43 +165,43 @@ pair<int,cnf_t> commanderEncoding(vector<int> amo)
 void YBEClauses(cnf_t *cnf)
 {
     int t = 0;
-    for (int i=0; i<size; i++)
-        for (int j=i+1; j<size; j++)
-            for (int k=0; k<size; k++)
+    for (int i=0; i<problem_size; i++)
+        for (int j=i+1; j<problem_size; j++)
+            for (int k=0; k<problem_size; k++)
             {
                 exactlyOne(cnf, ybe_left_lits[t]);
                 exactlyOne(cnf, ybe_right_lits[t]);
                 exactlyOne(cnf, ybe_lits[t]);
                 clause_t cl;
-                for(int a = 0; a<size; a++)
-                    for(int b=0; b<size; b++)
+                for(int a = 0; a<problem_size; a++)
+                    for(int b=0; b<problem_size; b++)
                     {
                         cl.push_back(-cycset_lits[i][j][a]);
                         cl.push_back(-cycset_lits[i][k][b]);
-                        if(size*a+b<size*size)
-                            cl.push_back(ybe_left_lits[t][size*a+b]);
+                        if(problem_size*a+b<problem_size*problem_size)
+                            cl.push_back(ybe_left_lits[t][problem_size*a+b]);
                         cnf->push_back(cl);
                         cl.clear();
 
                         cl.push_back(-cycset_lits[j][i][a]);
                         cl.push_back(-cycset_lits[j][k][b]);
-                        if(size*a+b<size*size)
-                            cl.push_back(ybe_right_lits[t][size*a+b]);
+                        if(problem_size*a+b<problem_size*problem_size)
+                            cl.push_back(ybe_right_lits[t][problem_size*a+b]);
                         cnf->push_back(cl);
                         cl.clear();
                     }
 
-                for(int a = 0; a<size*size; a++)
-                    for(int b=0; b<size; b++)
+                for(int a = 0; a<problem_size*problem_size; a++)
+                    for(int b=0; b<problem_size; b++)
                     {
                         cl.push_back(-ybe_left_lits[t][a]);
-                        cl.push_back(-cycset_lits[floor(a/size)][a%size][b]);
+                        cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
                         cl.push_back(ybe_lits[t][b]);
                         cnf->push_back(cl);
                         cl.clear();
 
                         cl.push_back(-ybe_right_lits[t][a]);
-                        cl.push_back(-cycset_lits[floor(a/size)][a%size][b]);
+                        cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
                         cl.push_back(ybe_lits[t][b]);
                         cnf->push_back(cl);
                         cl.clear();

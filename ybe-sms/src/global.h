@@ -5,7 +5,7 @@
 
 extern int nextFreeVariable;
 extern bool allModels;
-extern int size;
+extern int problem_size;
 
 extern vector<vector<vector<lit_t>>> cycset_lits;
 extern vector<vector<lit_t>> ybe_left_lits;
