@@ -9,10 +9,11 @@ class LimitReachedException
  * Throws std::vector<signed_edge_t> if current partially defined graph is not minimal
  * Throws LimitReachedException if cutoff limit is reached
  */
+
 void checkMinimality(cycle_set_t &cycset);
 
-bool permSmaller(vector<int> perm, vector<tuple<int,int,int>> &vars, cycle_set_t &cycset);
+int permSmaller(vector<int> perm, vector<array<int,3>> &vars, vector<array<int,3>> &pvars, int d, cycle_set_t &cycset, unordered_set<int> unused);
 
-void makePerms(vector<int> perm, vector<int> toPermute, vector<tuple<int,int,int>> &vars, cycle_set_t &cycset);
+int makePerms(vector<int> perm, unordered_set<int> toPermute, vector<array<int,3>> &vars, vector<array<int,3>> &pvars, cycle_set_t &cycset, int d);
 
-void addClauses(vector<int> perm, vector<tuple<int,int,int>> &vars, vector<tuple<int,int,int>> &permedVars, cycle_set_t &cycset);
+void addClauses(vector<int> perm, vector<array<int,3>> &vars, vector<array<int,3>> &pvars, cycle_set_t &cycset);

@@ -8,11 +8,10 @@ class CommonInterface
 public:
   void solve(); // TODO suitable return value;
   virtual ~CommonInterface() {}
-
+  int nModels = 0;
+  
   // functions which must be implemented for the concrete solver
 protected:
-  int nModels = 0;
-
   virtual void solve(vector<int> assumptions) { EXIT_UNWANTED_STATE }              // solve the formula under the assumption
   virtual bool solve(vector<int> assumptions, int timeout) { EXIT_UNWANTED_STATE } // solve with a given timeout; return false if timeout was reached
 

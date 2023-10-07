@@ -31,7 +31,8 @@ extern statistics stats;
 
 extern const char **optionsClingo;
 extern int nOptionsClingo;
-
+extern bool propagateLiteralsCadical;
+extern bool checkSolutionInProp;
 extern string proofFile;
 
 extern FILE *addedClauses;

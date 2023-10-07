@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+//#include <Python.h>
+
 
 int nextFreeVariable;
 int problem_size;
@@ -16,6 +18,8 @@ vector<vector<lit_t>> ybe_lits;
 clock_t startOfSolving;
 bool allModels;
 statistics stats;
+bool propagateLiteralsCadical = false;
+bool checkSolutionInProp = false;
 
 int main(int argc, char const **argv)
 {
@@ -35,6 +39,19 @@ int main(int argc, char const **argv)
             problem_size = atoi(argv[i]);
             continue;
         }
+
+        if (strcmp("--propLits", argv[i]) == 0)
+        {
+            propagateLiteralsCadical = true;
+            continue;
+        }
+
+    if (strcmp("--checkSols", argv[i]) == 0)
+        {
+            checkSolutionInProp = true;
+            continue;
+        }
+
 
         /*printf("ERROR: invalid argument %s\n", argv[i]);
         EXIT_UNWANTED_STATE */
@@ -106,33 +123,36 @@ int main(int argc, char const **argv)
     
     // SOLVE PER DIAGONAL
 
-    clause_t cl;
-    //for(auto d : diags)
-    //{
+    /* clause_t cl;
+    int totalModels=0;
+    for(auto d : diags)
+    { */
         CommonInterface *solver;
-        cnf_t c = cnf_t(cnf.begin(),cnf.end());
-        for(size_t i=0; i<diags[0].size(); i++)
+        /* cnf_t c = cnf_t(cnf.begin(),cnf.end());
+        for(size_t i=0; i<d.size(); i++)
         {
             cl.push_back(cycset_lits[i][i][d[i]]);
-            printf("%d,", d[i]);
             c.push_back(cl);
             cl.clear();
-        }
+        } */
         
 
         printf("SAT Solver: Cadical\n");
         int highestVariable = 0;
-        for (auto clause : c)
+        for (auto clause : cnf)
         {
             for (auto lit : clause)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(c, highestVariable);
+        solver = new CadicalSolver(cnf, highestVariable);
 
         solver->solve();
 
         printf("Total time: %f\n", ((double)clock() - stats.start) / CLOCKS_PER_SEC);
+        //totalModels+=solver->nModels;
+        
     //}
+    //printf("Total models found: %d\n", totalModels);
     return 0;
 }

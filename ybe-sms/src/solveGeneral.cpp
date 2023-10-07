@@ -20,12 +20,12 @@ bool CommonInterface::propagate()
   if (stats.callsPropagator % 200 == 0)
   {
     auto matrix = getCycleSet();
-    printf("p\n");
-    printPartiallyDefinedCycleSet(matrix);
+    /* printf("p\n");
+    printPartiallyDefinedCycleSet(matrix); */
   }
 
-  //res = checkMin();
-  res = true;
+  res = checkMin();
+  //res = true;
   
   stats.timePropagator += clock() - start;
   return res;
@@ -37,7 +37,6 @@ bool CommonInterface::checkMin()
   bool res = true;
   cycle_set_t cycset = getCycleSet();
 
-  // printAdjacencyMatrix(matrix);
   try
   {
     checkMinimality(cycset);
@@ -45,6 +44,12 @@ bool CommonInterface::checkMin()
   catch (LimitReachedException e)
   {
     printf("Limit reached\n");
+  }
+  catch (clause_t c)
+  {
+    stats.nSymBreakClauses++;
+    addClause(c,true);
+    res=false;
   }
   // printf("Time %f\n", ((double) clock() - start) / CLOCKS_PER_SEC);
   stats.timeMinimalityCheck += clock() - start;
@@ -55,14 +60,13 @@ bool CommonInterface::check()
 {
   // printf("Start fully defined\n");
   clock_t start = clock();
+  checkMin();
+  
   stats.timePropagator += clock() - start;
 
-  checkMin();
 
   stats.callsCheck++;
-  start = clock();
   cycle_set_t cycset = getCycleSet();
-  // printAdjacencyMatrix(matrix);
 
   nModels++;
   printf("Solution %d\n", nModels);

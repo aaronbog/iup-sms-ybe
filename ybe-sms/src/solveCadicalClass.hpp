@@ -128,15 +128,23 @@ public:
         if (!clauses.empty())
             return false; // EXIT_UNWANTED_STATE only do check if there isn't another clause to add before
         // this->current_trail = &model;
-        return check();
+        if (checkSolutionInProp)
+        {
+            return check();
+        }
+        return true;
     }
 
     bool check_solution()
     {
-        checkMode = true;
-        bool res = check();
-        checkMode = false;
-        return res;
+        if (!checkSolutionInProp)
+        {
+            checkMode = true;
+            bool res = check();
+            checkMode = false;
+            return res;
+        }
+        return true;
     }
 
     bool cb_has_external_clause()
@@ -144,11 +152,11 @@ public:
         // PRINT_CURRENT_LINE
         // if no clause, then check whether a clause could be added. If already a clause present then just return clause.
         // if propagation is done in other function then not compute clauses here
-        /* if (clauses.empty() && changeInTrail && !propagateLiteralsCadical)
+        if (clauses.empty() && changeInTrail && !propagateLiteralsCadical)
         {
             changeInTrail = false;
             propagate();
-        } */
+        }
 
         // printf("Check for external clause: %ld\n", sym_breaking_clause.size());
         return !clauses.empty();
@@ -181,8 +189,8 @@ public:
     int cb_propagate()
     {
         // PRINT_CURRENT_LINE
-        /* if (!propagateLiteralsCadical)
-            return 0; */
+        if (!propagateLiteralsCadical)
+            return 0;
 
         // PRINT_CURRENT_LINE
         
@@ -212,7 +220,7 @@ public:
             }
             else if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == True_t && l > 0)
                 return 0; // already satisfied
-            else if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == True_t && l < 0)
+            else if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == False_t && l < 0)
                 return 0; // already satisfied
         }
 
