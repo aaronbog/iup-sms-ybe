@@ -10,8 +10,8 @@ vector<array<int,3>> pvars;
 
 void checkMinimality(cycle_set_t &cycset)
 {
-    printf("MINCHECK CALL\n");
-    printPartiallyDefinedCycleSet(cycset);
+    /* printf("MINCHECK CALL\n");
+    printPartiallyDefinedCycleSet(cycset); */
     
     ordered_vars=vector<array<int,3>>();
     pvars=vector<array<int,3>>();

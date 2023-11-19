@@ -65,7 +65,6 @@ bool CommonInterface::checkMin()
 
 bool CommonInterface::check()
 {
-  printf("Start fully defined\n");
   clock_t start = clock();
   
   bool res=checkMin();

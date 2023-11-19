@@ -11,6 +11,10 @@ class LimitReachedException
  * Throws LimitReachedException if cutoff limit is reached
  */
 
+int getPermsOriginalKnown(vector<int> &perm, vector<int> &testPerm, list<vector<int>> &fixingPerms, int invVal, int ogVal, int permVal);
+
+void getPossiblePermutations(cycle_set_t &cycset, vector<int> &perm, list<tuple<int,int,int>> &pos, int i, int j);
+
 void checkMinimality_v2(cycle_set_t &cycset);
 
 int smallerOrEqualSymms(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
