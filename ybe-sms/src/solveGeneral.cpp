@@ -6,6 +6,7 @@
 #include "solve.h"
 #include "solveGeneral.hpp"
 #include "cadical.hpp"
+#include "minimalityCheck_V2.h"
 #include "minimalityCheck.h"
 
 typedef int lit_t;
@@ -17,15 +18,10 @@ bool CommonInterface::propagate()
 
   bool res;
 
-  if (stats.callsPropagator % 200 == 0)
-  {
-    auto matrix = getCycleSet();
-    /* printf("p\n");
-    printPartiallyDefinedCycleSet(matrix); */
-  }
-
-  res = checkMin();
-  //res = true;
+  if ((stats.callsPropagator % 20 == 0) && checkSolutionInProp)
+    res=checkMin();
+  else
+    res=true;
   
   stats.timePropagator += clock() - start;
   return res;
@@ -39,7 +35,10 @@ bool CommonInterface::checkMin()
 
   try
   {
-    checkMinimality(cycset);
+    if(v2)
+      checkMinimality_v2(cycset);
+    else
+      checkMinimality(cycset);
   }
   catch (LimitReachedException e)
   {
@@ -51,6 +50,14 @@ bool CommonInterface::checkMin()
     addClause(c,true);
     res=false;
   }
+  catch (vector<clause_t> cs)
+  {
+    for(auto c : cs){
+      stats.nSymBreakClauses++;
+      addClause(c,true);
+    }
+    res=false;
+  } 
   // printf("Time %f\n", ((double) clock() - start) / CLOCKS_PER_SEC);
   stats.timeMinimalityCheck += clock() - start;
   return res;
@@ -58,14 +65,19 @@ bool CommonInterface::checkMin()
 
 bool CommonInterface::check()
 {
-  // printf("Start fully defined\n");
+  printf("Start fully defined\n");
   clock_t start = clock();
-  checkMin();
+  
+  bool res=checkMin();
   
   stats.timePropagator += clock() - start;
-
-
   stats.callsCheck++;
+
+  if(!res)
+    return false;
+
+
+  
   cycle_set_t cycset = getCycleSet();
 
   nModels++;

@@ -20,6 +20,7 @@ bool allModels;
 statistics stats;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
+bool v2 = false;
 
 int main(int argc, char const **argv)
 {
@@ -49,6 +50,12 @@ int main(int argc, char const **argv)
     if (strcmp("--checkSols", argv[i]) == 0)
         {
             checkSolutionInProp = true;
+            continue;
+        }
+
+    if (strcmp("--v2", argv[i]) == 0)
+        {
+            v2 = true;
             continue;
         }
 
@@ -108,7 +115,7 @@ int main(int argc, char const **argv)
 
     
 
-    vector<int> toPart;
+    /* vector<int> toPart;
     vector<vector<int>> parts;
     for(int i=0; i<problem_size; i++)
         toPart.push_back(i);
@@ -119,7 +126,7 @@ int main(int argc, char const **argv)
         d.push_back(i);
     diags.push_back(d);
     d.clear();
-    makeDiagonals(parts, diags);
+    makeDiagonals(parts, diags); */
     
     // SOLVE PER DIAGONAL
 

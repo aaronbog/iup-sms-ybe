@@ -67,6 +67,7 @@ void CadicalSolver::solve(vector<int> assumptions)
     {
         for (auto lit : assumptions)
             solver->assume(lit);
+        //solver->statistics();
     } while (solver->solve() == 10 && !check_solution());
 }
 
