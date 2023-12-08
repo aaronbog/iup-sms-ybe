@@ -13,12 +13,13 @@ typedef int lit_t;
 
 bool CommonInterface::propagate()
 {
+
   stats.callsPropagator++;
   auto start = clock();
 
   bool res;
 
-  if ((stats.callsPropagator % 20 == 0) && checkSolutionInProp)
+  if ((stats.callsPropagator % checkFreq == 0) && checkSolutionInProp)
     res=checkMin();
   else
     res=true;
@@ -36,9 +37,9 @@ bool CommonInterface::checkMin()
   try
   {
     if(v2)
-      checkMinimality_v2(cycset);
+      checkMinimality_v2(cycset,cycset_lits);
     else
-      checkMinimality(cycset);
+      checkMinimality(cycset, cycset_lits);
   }
   catch (LimitReachedException e)
   {
@@ -92,6 +93,8 @@ bool CommonInterface::check()
       for (int j = 0; j < problem_size; j++)
         for (int k = 0; k < problem_size; k++)
         {
+          if(i==j)
+            continue;
           if (cs.assignments[i][j][k] == True_t){
             clause.push_back(-cycset_lits[i][j][k]);
           }

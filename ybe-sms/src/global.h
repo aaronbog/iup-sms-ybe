@@ -5,12 +5,15 @@
 
 extern int nextFreeVariable;
 extern bool allModels;
+extern bool diagPart;
 extern int problem_size;
+extern int checkFreq;
 
-extern vector<vector<vector<lit_t>>> cycset_lits;
-extern vector<vector<lit_t>> ybe_left_lits;
-extern vector<vector<lit_t>> ybe_right_lits;
-extern vector<vector<lit_t>> ybe_lits;
+
+//extern vector<vector<vector<lit_t>>> cycset_lits;
+//extern vector<vector<lit_t>> ybe_left_lits;
+//extern vector<vector<lit_t>> ybe_right_lits;
+//extern vector<vector<lit_t>> ybe_lits;
 #define COUNT_ASSIGNED 0
 #define ESTIMATE_SPACE 1
 

@@ -2,11 +2,38 @@
 #include "useful.h"
 #include <math.h>
 
-void encodeEntries(cnf_t *cnf)
+void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits)
+{   for (int i = 0; i < problem_size; i++)
+        for (int j = 0; j < problem_size; j++)
+            for (int k = 0; k < problem_size; k++)
+                {if(i!=j)
+                    cycset_lits[i][j][k] = nextFree++;}
+    
+    for(int i=0; i<problem_size; i++)
+        for(int j=0; j<problem_size; j++)
+            {if(i!=j)
+                exactlyOne(cnf, cycset_lits[i][j], nextFree);}
+
+    for(int i=0; i<problem_size; i++)
+        for(int k=0; k<problem_size; k++)
+        {
+            if(d[i]==k)
+                continue;
+            clause_t cl;
+            for(int j=0; j<problem_size; j++)
+                {if(j!=i)
+                    cl.push_back(cycset_lits[i][j][k]);
+                }
+            cnf->push_back(cl);
+            cl.clear();
+        }
+}
+
+void encodeEntries(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits)
 {
     for(int i=0; i<problem_size; i++)
         for(int j=0; j<problem_size; j++)
-            exactlyOne(cnf, cycset_lits[i][j]);
+            exactlyOne(cnf, cycset_lits[i][j], nextFree);
 
     for(int i=0; i<problem_size; i++)
         for(int k=0; k<problem_size; k++)
@@ -26,10 +53,9 @@ void encodeEntries(cnf_t *cnf)
             cnf->push_back(cl);
             cl.clear();
         }
-    
 }
 
-void exactlyOne(cnf_t *cnf, vector<int> eo)
+void exactlyOne(cnf_t *cnf, vector<int> eo, int &nextFree)
 {
     if(eo.size()<=6)
     {
@@ -38,7 +64,7 @@ void exactlyOne(cnf_t *cnf, vector<int> eo)
     }
     else
     {
-        auto p=commanderEncoding(eo);
+        auto p=commanderEncoding(eo, nextFree);
         for(auto cl : p.second)
             cnf->push_back(cl);
         atLeastOne(cnf, eo);
@@ -67,7 +93,7 @@ void atLeastOne(cnf_t *cnf, vector<int> amo)
     cnf->push_back(cl);
 }
 
-pair<int,cnf_t> commanderEncoding(vector<int> amo)
+pair<int,cnf_t> commanderEncoding(vector<int> amo, int &nextFree)
 {
     int a,b,c;
     cnf_t clauses;
@@ -93,9 +119,9 @@ pair<int,cnf_t> commanderEncoding(vector<int> amo)
     {
         int p=ceil(amo.size()/3);
 
-        auto p1 = commanderEncoding(vector<int>(amo.begin(), amo.begin()+p));
-        auto p2 = commanderEncoding(vector<int>(amo.begin()+p, amo.begin()+2*p));
-        auto p3 = commanderEncoding(vector<int>(amo.begin()+2*p, amo.end()));
+        auto p1 = commanderEncoding(vector<int>(amo.begin(), amo.begin()+p), nextFree);
+        auto p2 = commanderEncoding(vector<int>(amo.begin()+p, amo.begin()+2*p),nextFree);
+        auto p3 = commanderEncoding(vector<int>(amo.begin()+2*p, amo.end()), nextFree);
         a = p1.first;
         b = p2.first;
         c = p3.first;
@@ -108,7 +134,7 @@ pair<int,cnf_t> commanderEncoding(vector<int> amo)
             clauses.push_back(cl);
     }
 
-    int cmd = nextFreeVariable++;
+    int cmd = nextFree++;
     clause_t cl;
     cl.push_back(-a);
     cl.push_back(cmd);
@@ -162,16 +188,120 @@ pair<int,cnf_t> commanderEncoding(vector<int> amo)
     return make_pair(cmd,clauses);
 }
 
-void YBEClauses(cnf_t *cnf)
+void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits, vector<vector<lit_t>> &ybe_left_lits, vector<vector<lit_t>> &ybe_right_lits, vector<vector<lit_t>> &ybe_lits)
+{
+    int t = 0;
+    clause_t cl;
+
+    for (int i=0; i<problem_size; i++)
+        for (int j=i+1; j<problem_size; j++)
+            for (int k=0; k<problem_size; k++)
+            {
+                for(int a = 0; a<problem_size; a++)
+                    for(int b=0; b<problem_size; b++)
+                    {
+                        if(i!=k || d[i]==b){
+                            if(i!=k){
+                                cl.push_back(-cycset_lits[i][k][b]);
+                            }
+                            cl.push_back(-cycset_lits[i][j][a]);
+                            if(problem_size*a+b<problem_size*problem_size){
+                                if(ybe_left_lits[t][problem_size*a+b]==0)
+                                    ybe_left_lits[t][problem_size*a+b]=nextFree++;
+                                cl.push_back(ybe_left_lits[t][problem_size*a+b]);
+                            }
+                            cnf->push_back(cl);
+                            cl.clear();
+                        }
+
+                        if(j!=k || d[j]==b){
+                            if(j!=k){
+                                cl.push_back(-cycset_lits[j][k][b]);
+                            }
+                            cl.push_back(-cycset_lits[j][i][a]);
+                            if(problem_size*a+b<problem_size*problem_size){
+                                if(ybe_right_lits[t][problem_size*a+b]==0)
+                                    ybe_right_lits[t][problem_size*a+b]=nextFree++;
+                                cl.push_back(ybe_right_lits[t][problem_size*a+b]);
+                            }
+                            cnf->push_back(cl);
+                            cl.clear();
+                        }
+                    }
+
+                vector<int> litsCopy;
+                copy(ybe_left_lits[t].begin(), ybe_left_lits[t].end(),back_inserter(litsCopy));
+                litsCopy.erase(remove(litsCopy.begin(),litsCopy.end(),0),litsCopy.end());
+                litsCopy.shrink_to_fit();
+                exactlyOne(cnf,litsCopy,nextFree);
+                
+                litsCopy.clear();
+                copy(ybe_right_lits[t].begin(), ybe_right_lits[t].end(),back_inserter(litsCopy));
+                litsCopy.erase(remove(litsCopy.begin(),litsCopy.end(),0),litsCopy.end());
+                litsCopy.shrink_to_fit();
+                exactlyOne(cnf,litsCopy,nextFree);
+                t+=1;
+            }
+
+    t = 0;
+    for (int i=0; i<problem_size; i++)
+        for (int j=i+1; j<problem_size; j++)
+            for (int k=0; k<problem_size; k++)
+            {
+                for(int a = 0; a<problem_size*problem_size; a++)
+                    for(int b=0; b<problem_size; b++){
+                        if(ybe_left_lits[t][a]!=0)
+                        {
+                            int r = floor(a/problem_size);
+                            int c = a%problem_size;
+                            if(r!=c || d[r]==b){
+                                if(r!=c)
+                                    cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
+                                cl.push_back(-ybe_left_lits[t][a]);
+                                if(ybe_lits[t][b]==0)
+                                    ybe_lits[t][b]=nextFree++;
+                                cl.push_back(ybe_lits[t][b]);
+                                cnf->push_back(cl);
+                                cl.clear();
+                            }
+                        }
+
+                        if(ybe_right_lits[t][a]!=0)
+                        {
+                            int r = floor(a/problem_size);
+                            int c = a%problem_size;
+                            if(r!=c || d[r]==b){
+                                if(r!=c)
+                                    cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
+                                cl.push_back(-ybe_right_lits[t][a]);
+                                if(ybe_lits[t][b]==0)
+                                    ybe_lits[t][b]=nextFree++;
+                                cl.push_back(ybe_lits[t][b]);
+                                cnf->push_back(cl);
+                                cl.clear();
+                            }
+                        }
+                    }
+                
+                vector<int> litsCopy;
+                copy(ybe_lits[t].begin(), ybe_lits[t].end(),back_inserter(litsCopy));
+                litsCopy.erase(remove(litsCopy.begin(),litsCopy.end(),0),litsCopy.end());
+                litsCopy.shrink_to_fit();
+                exactlyOne(cnf,litsCopy,nextFree);
+                t+=1;
+            }
+}
+
+void YBEClauses(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits, vector<vector<lit_t>> &ybe_left_lits, vector<vector<lit_t>> &ybe_right_lits, vector<vector<lit_t>> &ybe_lits)
 {
     int t = 0;
     for (int i=0; i<problem_size; i++)
         for (int j=i+1; j<problem_size; j++)
             for (int k=0; k<problem_size; k++)
             {
-                exactlyOne(cnf, ybe_left_lits[t]);
-                exactlyOne(cnf, ybe_right_lits[t]);
-                exactlyOne(cnf, ybe_lits[t]);
+                exactlyOne(cnf, ybe_left_lits[t],nextFree);
+                exactlyOne(cnf, ybe_right_lits[t],nextFree);
+                exactlyOne(cnf, ybe_lits[t],nextFree);
                 clause_t cl;
                 for(int a = 0; a<problem_size; a++)
                     for(int b=0; b<problem_size; b++)

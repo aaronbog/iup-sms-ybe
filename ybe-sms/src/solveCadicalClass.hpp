@@ -28,8 +28,10 @@ private:
 
     vector<vector<int>> literal2clausePos; // for each edge variable store clause which was used the last time.
     vector<vector<int>> literal2clauseNeg; // for each negation of an edge variable
+    void fixDiag(vector<int> diag);
 public:
     CadicalSolver(cnf_t &cnf, int highestVariable);
+    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits);
     ~CadicalSolver() { solver->disconnect_external_propagator(); }
 
 protected: // virtual classes from common interface

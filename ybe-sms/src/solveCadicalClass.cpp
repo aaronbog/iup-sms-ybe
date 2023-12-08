@@ -4,9 +4,10 @@
 #include "cadical.hpp"
 
 // add formula and register propagator
-CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
+CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits)
 {
     this->highestVariable = highestVariable;
+    this->cycset_lits=lits;
     currentCycleSet = cycle_set_t();
     currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
     currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
@@ -17,9 +18,8 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
     // only_propagating = false;
     solver = new CaDiCaL::Solver();
     
-    
     // solver->configure("plain");
-    if (!solver->configure("unsat"))
+    if (!solver->configure("sat"))
         EXIT_UNWANTED_STATE
 
     // solver->set("lucky", 0);
@@ -35,8 +35,8 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                lit2entry.push_back(make_tuple(i, j,k));
-
+                if(!diagPart || i!=j)
+                    lit2entry.push_back(make_tuple(i, j,k));
     // add clauses to solver
     for (auto clause : cnf)
     {
@@ -55,11 +55,31 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable)
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                solver->add_observed_var(cycset_lits[i][j][k]);
+                if(!diagPart || i!=j)
+                    solver->add_observed_var(cycset_lits[i][j][k]);
+
+    
 
     literal2clausePos = vector<vector<int>>(highestEdgeVariable + 1);
     literal2clauseNeg = vector<vector<int>>(highestEdgeVariable + 1);
+
+    if(diagPart)
+        fixDiag(diag);
 }
+void CadicalSolver::fixDiag(vector<int> diag)
+{
+    for(int i=0; i<problem_size; i++){
+        for(int k=0; k<problem_size; k++){
+            if(k!=diag[i])
+                currentCycleSet.assignments[i][i][k]=False_t;
+            else
+                currentCycleSet.assignments[i][i][k]=True_t;
+            fixedCycleSet[i][i][k]=true;
+        }       
+    currentCycleSet.matrix[i][i]=diag[i];
+    }
+}
+
 
 void CadicalSolver::solve(vector<int> assumptions)
 {

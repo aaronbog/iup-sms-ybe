@@ -8,7 +8,7 @@ vector<array<int,3>> ordered_vars;
 vector<array<int,3>> pvars;
 
 
-void checkMinimality(cycle_set_t &cycset)
+void checkMinimality(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits)
 {
     /* printf("MINCHECK CALL\n");
     printPartiallyDefinedCycleSet(cycset); */
@@ -25,10 +25,10 @@ void checkMinimality(cycle_set_t &cycset)
     vector<int> toPerm(problem_size);
     iota(toPerm.begin(),toPerm.end(),0);
 
-    makePerms(perm,toPerm, toPerm,cycset,0);
+    makePerms(perm,toPerm, toPerm,cycset,0, cycset_lits);
 }
 
-int makePerms(vector<int> &perm, vector<int> toPermute_vars, vector<int> toPermute, cycle_set_t &cycset, int d)
+int makePerms(vector<int> &perm, vector<int> toPermute_vars, vector<int> toPermute, cycle_set_t &cycset, int d, vector<vector<vector<lit_t>>> &cycset_lits)
 {
     if(d<ordered_vars.size())
     {
@@ -77,15 +77,15 @@ int makePerms(vector<int> &perm, vector<int> toPermute_vars, vector<int> toPermu
                     {ext_perm[rest[0]]=restVals[0];
                     restVals.clear();}
                 
-                int toCont=permSmaller(ext_perm, d, cycset);
+                int toCont=permSmaller(ext_perm, d, cycset,cycset_lits);
                 if(toCont==0)
                 {
                     int i;
                     if(rest.size()!=1){
-                        i=makePerms(ext_perm, rest, restVals, cycset,d+1);
+                        i=makePerms(ext_perm, rest, restVals, cycset,d+1,cycset_lits);
                     }
                     else
-                        i= makePerms(ext_perm, vector<int>(0),  vector<int>(0), cycset,d+1);
+                        i= makePerms(ext_perm, vector<int>(0),  vector<int>(0), cycset,d+1,cycset_lits);
                     if(i<=0)
                         {pvars=vector<array<int,3>>(pvars.begin(),pvars.begin()+d);}
                 }
@@ -99,7 +99,7 @@ int makePerms(vector<int> &perm, vector<int> toPermute_vars, vector<int> toPermu
     return 0;
 }
 
-int permSmaller(vector<int> &invperm, int d, cycle_set_t &cycset)
+int permSmaller(vector<int> &invperm, int d, cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits)
 {
     array<int,3> permed_var;
     permed_var={invperm[ordered_vars[d][0]],invperm[ordered_vars[d][1]],invperm[ordered_vars[d][2]]};
@@ -116,7 +116,7 @@ int permSmaller(vector<int> &invperm, int d, cycle_set_t &cycset)
 
     if((og_asg == True_t && perm_asg==False_t) || (og_asg == True_t && perm_asg==Unknown_t) || (og_asg == Unknown_t && perm_asg==False_t))
         {   
-            addClauses(cycset);
+            addClauses(cycset,cycset_lits);
             return 1; //If perm < OG -> we have found a permutation to use for breaking!
         }
     if((og_asg == False_t && perm_asg==True_t))
@@ -126,7 +126,7 @@ int permSmaller(vector<int> &invperm, int d, cycle_set_t &cycset)
     return -1; //If not one of the cases above, backtrack and try other permutation.
 }
 
-void addClauses(cycle_set_t &cycset)
+void addClauses(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits)
 {
 
     vector<int> toAdd;
