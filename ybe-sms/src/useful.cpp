@@ -11,6 +11,16 @@ void printCycleSet(const cycle_set_t &cycset)
     }
 }
 
+void fprintCycleSet(FILE *stream, const cycle_set_t &cycset)
+{
+    for (auto row : cycset.matrix)
+    {
+      for (auto value : row)
+        fprintf(stream, "%d ", value);
+      fprintf(stream, "\n");
+    }
+}
+
 void printPartiallyDefinedCycleSet(const cycle_set_t &cycset)
 {
     for (auto row : cycset.matrix)
@@ -65,10 +75,6 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
   vector<vector<vector<int>>> cycles;
   for(size_t i = 0; i<parts.size(); i++)
   {
-    printf("PART: ");
-    for(int j : parts[i])
-      printf("%d,", j);
-    printf("\n");
     vector<int> part;
     if(parts[i].size()==1)
     {

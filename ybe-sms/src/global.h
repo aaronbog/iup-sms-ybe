@@ -19,18 +19,16 @@ extern int checkFreq;
 
 typedef struct
 {
-    clock_t start;
-    clock_t timePropagator;
-    clock_t timeMinimalityCheck;
-    clock_t timeMinCheckSwap;
-    clock_t timeCheckFullGraphs;
+    chrono::_V2::steady_clock::time_point start;
+    double timePropagator;
+    double timeMinimalityCheck;
+    double timeMinCheckSwap;
+    double timeCheckFullGraphs;
     long long callsPropagator;
     long long callsCheck;
     long long nSymBreakClauses; // number of symmetry breaking clauses
     long long hyperclauses;
 } statistics;
-
-extern statistics stats;
 
 extern const char **optionsClingo;
 extern int nOptionsClingo;

@@ -4,16 +4,29 @@
 #include "cadical.hpp"
 
 // add formula and register propagator
-CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits)
+CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, statistics stats)
 {
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
+    this->stats=stats;
     currentCycleSet = cycle_set_t();
     currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
     currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
     fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
     // The root-level of the trail is always there
     current_trail.push_back(std::vector<int>());
+
+    string outputFilePath;
+    outputFilePath.append("sols_");
+    outputFilePath.append(to_string(problem_size));
+    outputFilePath.append("_");
+    for(auto d : diag)
+        outputFilePath.append(to_string(d));
+    outputFilePath.append(".txt");
+
+    FILE *fp;
+    fp = fopen(outputFilePath.c_str(),"w");
+    this->output=fp;
 
     // only_propagating = false;
     solver = new CaDiCaL::Solver();
@@ -37,6 +50,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
             for (int k = 0; k < problem_size; k++)
                 if(!diagPart || i!=j)
                     lit2entry.push_back(make_tuple(i, j,k));
+
     // add clauses to solver
     for (auto clause : cnf)
     {
@@ -57,8 +71,6 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
             for (int k = 0; k < problem_size; k++)
                 if(!diagPart || i!=j)
                     solver->add_observed_var(cycset_lits[i][j][k]);
-
-    
 
     literal2clausePos = vector<vector<int>>(highestEdgeVariable + 1);
     literal2clauseNeg = vector<vector<int>>(highestEdgeVariable + 1);
@@ -89,6 +101,7 @@ void CadicalSolver::solve(vector<int> assumptions)
             solver->assume(lit);
         //solver->statistics();
     } while (solver->solve() == 10 && !check_solution());
+    fclose(output);
 }
 
 bool CadicalSolver::solve(vector<int>, int)

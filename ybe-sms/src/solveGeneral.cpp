@@ -15,7 +15,7 @@ bool CommonInterface::propagate()
 {
 
   stats.callsPropagator++;
-  auto start = clock();
+  auto start = steady_clock::now();
 
   bool res;
 
@@ -24,13 +24,13 @@ bool CommonInterface::propagate()
   else
     res=true;
   
-  stats.timePropagator += clock() - start;
+  stats.timePropagator += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);;
   return res;
 }
 
 bool CommonInterface::checkMin()
 {
-  clock_t start = clock();
+  auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
 
@@ -60,17 +60,17 @@ bool CommonInterface::checkMin()
     res=false;
   } 
   // printf("Time %f\n", ((double) clock() - start) / CLOCKS_PER_SEC);
-  stats.timeMinimalityCheck += clock() - start;
+  stats.timeMinimalityCheck += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   return res;
 }
 
 bool CommonInterface::check()
 {
-  clock_t start = clock();
+  auto start = steady_clock::now();
   
   bool res=checkMin();
-  
-  stats.timePropagator += clock() - start;
+
+  stats.timePropagator += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   stats.callsCheck++;
 
   if(!res)
@@ -81,8 +81,8 @@ bool CommonInterface::check()
   cycle_set_t cycset = getCycleSet();
 
   nModels++;
-  printf("Solution %d\n", nModels);
-  printCycleSet(cycset);
+  fprintf(output,"Solution %d\n", nModels);
+  fprintCycleSet(output, cycset);
 
   if (allModels)
   {
@@ -110,12 +110,11 @@ bool CommonInterface::check()
 
 void CommonInterface::printStatistics()
 {
-  printf("Time in propagator: %f\n", ((double)stats.timePropagator) / CLOCKS_PER_SEC);
-  printf("Time in minimality check: %f\n", ((double)stats.timeMinimalityCheck) / CLOCKS_PER_SEC);
-  printf("Time in check full graphs: %f\n", ((double)stats.timeCheckFullGraphs) / CLOCKS_PER_SEC);
+  printf("Time in propagator: %f\n", (stats.timePropagator));
+  printf("Time in minimality check: %f\n", (stats.timeMinimalityCheck));
+  printf("Time in check full graphs: %f\n", (stats.timeCheckFullGraphs));
   printf("Calls of check: %lld\n", stats.callsCheck);
   printf("Calls propagator: %lld\n", stats.callsPropagator);
-  printf("Number of hypercolorings: %lld\n", stats.hyperclauses);
   printf("Number of symmetry breaking constraints: %lld\n", stats.nSymBreakClauses);
   if (allModels)
     printf("Number of models: %d\n", nModels);
@@ -124,13 +123,13 @@ void CommonInterface::printStatistics()
 void CommonInterface::solve()
 {
   // solve
-  printf("Start solving\n");
+  printf("** Start solving\n");
   fflush(stdout);
 
   // get a solve handle
   int cubeCounter = 0;
   solve(vector<int>());
 
-  printf("Searched finished\n");
+  printf("** Search finished\n");
   printStatistics();
 }

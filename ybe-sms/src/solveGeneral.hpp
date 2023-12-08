@@ -10,6 +10,8 @@ public:
   virtual ~CommonInterface() {}
   int nModels = 0;
   vector<vector<vector<lit_t>>> cycset_lits;
+  statistics stats;
+  FILE *output;
   // functions which must be implemented for the concrete solver
 protected:
   virtual void solve(vector<int> assumptions) { EXIT_UNWANTED_STATE }              // solve the formula under the assumption

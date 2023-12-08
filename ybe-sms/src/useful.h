@@ -12,8 +12,10 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_set>
+#include <chrono>
 
 using namespace std;
+using namespace chrono;
 
 typedef int lit_t;
 typedef vector<lit_t> clause_t;
@@ -43,6 +45,7 @@ typedef struct {
 } cycle_set_t;
 
 void printCycleSet(const cycle_set_t &cycset);
+void fprintCycleSet(FILE *stream, const cycle_set_t &cycset);
 void printPartiallyDefinedCycleSet(const cycle_set_t &cycset);
 void part(int n, vector<int>& v, int level, vector<vector<int>>& parts);
 void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations);

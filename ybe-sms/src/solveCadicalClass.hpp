@@ -31,7 +31,7 @@ private:
     void fixDiag(vector<int> diag);
 public:
     CadicalSolver(cnf_t &cnf, int highestVariable);
-    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits);
+    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits, statistics stats);
     ~CadicalSolver() { solver->disconnect_external_propagator(); }
 
 protected: // virtual classes from common interface

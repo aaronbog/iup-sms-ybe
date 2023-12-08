@@ -15,7 +15,7 @@ int checkFreq = 20;
 clock_t startOfSolving;
 bool allModels = false;
 bool diagPart = false;
-statistics stats;
+bool parallel = false;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
 bool v2 = false;
@@ -51,24 +51,24 @@ int main(int argc, char const **argv)
             continue;
         }
 
-    if (strcmp("--checkSols", argv[i]) == 0)
-        {
-            checkSolutionInProp = true;
-            continue;
-        }
+        if (strcmp("--checkSols", argv[i]) == 0)
+            {
+                checkSolutionInProp = true;
+                continue;
+            }
 
-    if (strcmp("--v2", argv[i]) == 0)
-        {
-            v2 = true;
-            continue;
-        }
+        if (strcmp("--v2", argv[i]) == 0)
+            {
+                v2 = true;
+                continue;
+            }
 
-    if (strcmp("--checkFreq", argv[i]) == 0)
-        {
-            i++;
-            checkFreq = atoi(argv[i]);
-            continue;
-        }
+        if (strcmp("--checkFreq", argv[i]) == 0)
+            {
+                i++;
+                checkFreq = atoi(argv[i]);
+                continue;
+            }
 
 
         /*printf("ERROR: invalid argument %s\n", argv[i]);
@@ -76,14 +76,16 @@ int main(int argc, char const **argv)
     }
 
     // ASSIGN DEFAULTS
-    //stats.start = clock();
-
     int t=0;
     for(int i=0; i<problem_size; i++)
         t+=i;
     t*=problem_size;
 
     if(!diagPart){
+
+        statistics stats;
+        stats.start = steady_clock::now();
+
         cnf_t cnf;
         int nextFreeVariable = 1;
         vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
@@ -131,14 +133,16 @@ int main(int argc, char const **argv)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), cycset_lits);
+        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), cycset_lits, stats);
         solver->solve();
 
-        printf("Total time: %f\n", ((double)clock() - stats.start) / CLOCKS_PER_SEC);
+        printf("Total time: %f\n", (duration_cast<nanoseconds>(steady_clock::now()-stats.start).count()) / 1000000000.0);
 
         return 0;
     } else {
-        
+        using namespace std::chrono;
+        auto start = steady_clock::now();
+
         vector<int> toPart;
         vector<vector<int>> parts;
         for(int i=0; i<problem_size; i++)
@@ -153,10 +157,18 @@ int main(int argc, char const **argv)
         makeDiagonals(parts, diags);
 
         int totalModels=0;
+
+        vector<int> numSols=vector<int>(diags.size(),0);
+
+        int i;
         
-        #pragma omp parallel for
-        for(auto d : diags)
+        #pragma omp parallel for shared(numSols,i,t,diags) schedule(dynamic, 3) if(diags.size()>=20) 
+        for(i=0; i<diags.size(); i++)
         {
+            auto d = diags[i];
+            statistics stats;
+            stats.start=steady_clock::now();
+            
             cnf_t cnf;
             int nextFreeVariable = 1;
 
@@ -181,8 +193,7 @@ int main(int argc, char const **argv)
             }
 
             CommonInterface *solver;
-            
-            printf("SAT Solver: Cadical\n");
+
             int highestVariable = 0;
             for (auto clause : cnf)
             {
@@ -190,18 +201,20 @@ int main(int argc, char const **argv)
                     highestVariable = max(highestVariable, abs(lit));
             }
 
-            solver = new CadicalSolver(cnf, highestVariable,d, cycset_lits);
-            for(auto i : solver->cycset_lits){
-                printf("%d, ",i);
-            }
-            printf("\n");
+            solver = new CadicalSolver(cnf, highestVariable,d, cycset_lits, stats);
             solver->solve();
-            printf("SOLVING");
+            numSols[i]=solver->nModels;
 
-            printf("Total time: %f\n", ((double)clock() - stats.start) / CLOCKS_PER_SEC);
-            //totalModels+=solver->nModels;
+            printf("Diagonal: ");
+            for(auto i :d)
+                printf("%d-",i);
+            printf("\n");
+            printf("Num solutions: %d\n",solver->nModels);
+            printf("Total time: %f\n", (duration_cast<nanoseconds>(steady_clock::now()-stats.start).count()) / 1000000000.0);
+            printf("---------------------------------------------------------\n");
         }
-        //printf("Total models found: %d\n", totalModels);
+        printf("Total time: %f\n", (duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+        printf("Total models found: %d\n", accumulate(numSols.begin(),numSols.end(),0));
         return 0;
     }
 }
