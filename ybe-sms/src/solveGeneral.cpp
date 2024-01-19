@@ -33,7 +33,6 @@ bool CommonInterface::checkMin()
   auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
-
   try
   {
     if(v2)

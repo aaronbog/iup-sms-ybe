@@ -33,8 +33,8 @@ bool diagTest(cycle_set_t &cycset, vector<int> &perm, int i){
 void checkMinimality_v2(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits)
 {
 
-    /* printf("MINCHECK CALL\n");
-    printPartiallyDefinedCycleSet(cycset); */
+    //printf("MINCHECK CALL\n");
+    //printPartiallyDefinedCycleSet(cycset);
 
     vector<int> perm=vector<int>(problem_size,-1);
     list<vector<int>> fixingPerms={};
@@ -54,6 +54,10 @@ int getBreakingOrFixingSymms(cycle_set_t &cycset, list<vector<int>> &fixingPerms
 }
 
 int minimalityCheck(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int r, int c, int cont, vector<vector<vector<lit_t>>> &cycset_lits){
+    if(cont==-1){
+        //no fixing permutations
+        return -1;
+    }
     if(cont==-1){
         //no fixing permutations
         return -1;
@@ -444,6 +448,7 @@ vector<int> extendPerm(cycle_set_t &cycset, vector<int> &perm, int d){
 
 void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vector<vector<lit_t>>> &cycset_lits)
 {
+    //printf("addClauses\n");
     vector<int> toAdd;
     vector<int> invperm=vector<int>(problem_size,-1);
 

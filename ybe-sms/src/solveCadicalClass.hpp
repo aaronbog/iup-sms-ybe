@@ -53,7 +53,8 @@ protected: // virtual classes from common interface
                 for (int j = 0; j < problem_size; j++)
                     for (int k = 0; k < problem_size; k++)
                     {
-                        if (solver->val(cycset_lits[i][j][k])>0)
+                        if(!diagPart||i!=j){
+                            if (solver->val(cycset_lits[i][j][k])>0)
                         {
                             cycset.matrix[i][j]=k;
                             cycset.assignments[i][j][k]=True_t;
@@ -61,7 +62,12 @@ protected: // virtual classes from common interface
                         if (solver->val(cycset_lits[i][j][k])<0)
                         {
                             cycset.assignments[i][j][k]=False_t;
-                        } 
+                        }
+                        } else {
+                            cycset.matrix[i][j]=currentCycleSet.matrix[i][j];
+                            cycset.assignments[i][j][k]=True_t;
+                        }
+                         
                     } 
             return cycset;
         }
