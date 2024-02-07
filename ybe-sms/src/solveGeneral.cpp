@@ -6,7 +6,6 @@
 #include "solve.h"
 #include "solveGeneral.hpp"
 #include "cadical.hpp"
-#include "minimalityCheck_V2.h"
 #include "minimalityCheck.h"
 
 typedef int lit_t;
@@ -14,13 +13,15 @@ typedef int lit_t;
 bool CommonInterface::propagate()
 {
 
-  stats.callsPropagator++;
+  stats.callsPropagator+=1LL;
   auto start = steady_clock::now();
 
   bool res;
 
-  if ((stats.callsPropagator % checkFreq == 0) && checkSolutionInProp)
+  if ((stats.callsPropagator % checkFreq*1LL == 0) && checkSolutionInProp)
+  {
     res=checkMin();
+  }
   else
     res=true;
   
@@ -35,10 +36,7 @@ bool CommonInterface::checkMin()
   cycle_set_t cycset = getCycleSet();
   try
   {
-    if(v2)
-      checkMinimality_v2(cycset,cycset_lits);
-    else
-      checkMinimality(cycset, cycset_lits);
+    checkMinimality(cycset,cycset_lits);
   }
   catch (LimitReachedException e)
   {
@@ -46,19 +44,18 @@ bool CommonInterface::checkMin()
   }
   catch (clause_t c)
   {
-    stats.nSymBreakClauses++;
+    stats.nSymBreakClauses+=1LL;
     addClause(c,true);
     res=false;
   }
   catch (vector<clause_t> cs)
   {
     for(auto c : cs){
-      stats.nSymBreakClauses++;
+      stats.nSymBreakClauses+=1LL;
       addClause(c,true);
     }
     res=false;
   } 
-  // printf("Time %f\n", ((double) clock() - start) / CLOCKS_PER_SEC);
   stats.timeMinimalityCheck += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   return res;
 }
@@ -70,13 +67,12 @@ bool CommonInterface::check()
   bool res=checkMin();
 
   stats.timePropagator += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
-  stats.callsCheck++;
+  stats.callsCheck+=1LL;
 
   if(!res)
     return false;
 
 
-  
   cycle_set_t cycset = getCycleSet();
 
   nModels++;
@@ -94,13 +90,19 @@ bool CommonInterface::check()
         {
           if(i==j)
             continue;
+          /* if(!is_decision(cycset_lits[i][j][k]))
+            continue; */
           if (cs.assignments[i][j][k] == True_t){
             clause.push_back(-cycset_lits[i][j][k]);
           }
-          if (cs.assignments[i][j][k] == False_t){
+          //We can only add the positive lits, the negation are implied.
+          //This makes the added clauses smaller.
+          //Only adding the decision lits does not work somehow...
+          /* if (cs.assignments[i][j][k] == False_t){
             clause.push_back(cycset_lits[i][j][k]);
-          }
+          } */
         }
+    //printf("EXCLUDED SOL\n");
     addClause(clause, false);
     return false;
   }

@@ -8,6 +8,8 @@ extern bool allModels;
 extern bool diagPart;
 extern int problem_size;
 extern int checkFreq;
+extern int maxDepth;
+extern bool doFinalCheck;
 
 
 //extern vector<vector<vector<lit_t>>> cycset_lits;
@@ -24,17 +26,16 @@ typedef struct
     double timeMinimalityCheck;
     double timeMinCheckSwap;
     double timeCheckFullGraphs;
-    long long callsPropagator;
-    long long callsCheck;
-    long long nSymBreakClauses; // number of symmetry breaking clauses
-    long long hyperclauses;
+    long long callsPropagator=0;
+    long long callsCheck=0;
+    long long nSymBreakClauses=0; // number of symmetry breaking clauses
+    long long hyperclauses=0;
 } statistics;
 
 extern const char **optionsClingo;
 extern int nOptionsClingo;
 extern bool propagateLiteralsCadical;
 extern bool checkSolutionInProp;
-extern bool v2;
 extern string proofFile;
 
 extern FILE *addedClauses;

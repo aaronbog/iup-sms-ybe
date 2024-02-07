@@ -13,7 +13,6 @@ private:
     CaDiCaL::Solver *solver;
     const std::vector<int> *model;
     bool redundant;
-
     bool changeInTrail = true; // checks whether the trail has changed since the last propagation step
 
     int highestEdgeVariable;
@@ -73,8 +72,13 @@ protected: // virtual classes from common interface
         }
     }
 
+    bool is_decision(lit_t lit){
+        return solver->is_decision(lit);
+    }
+
     void addClause(const vector<lit_t> &clause, bool redundant)
     {
+        //printf("size clause: %d\n",clause.size());
         if (!checkMode)
             this->clauses.push_back(clause);
         else
@@ -84,6 +88,7 @@ protected: // virtual classes from common interface
                 solver->add(l);
             solver->add(0);
         }
+        //solver->resources();
     }
 
 public:
@@ -133,6 +138,7 @@ public:
     // currently not checked in propagator but with the normal incremental interface to allow adding other literals or even new once.
     bool cb_check_found_model(const std::vector<int> &model)
     {
+        //printf("cb_check_found_model\n");
         if (!clauses.empty())
             return false; // EXIT_UNWANTED_STATE only do check if there isn't another clause to add before
         // this->current_trail = &model;
@@ -145,11 +151,13 @@ public:
 
     bool check_solution()
     {
-        if (!checkSolutionInProp)
+        //printf("check_solution, checkFinal:%d\n",doFinalCheck);
+        if (!checkSolutionInProp || doFinalCheck)
         {
             checkMode = true;
             bool res = check();
             checkMode = false;
+            //doFinalCheck=false;
             return res;
         }
         return true;

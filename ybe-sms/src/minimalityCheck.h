@@ -1,4 +1,9 @@
 #include "useful.h"
+#include<list>
+
+class LimitReachedException
+{
+};
 
 /**
  * Check if cycle set is minimal and add a clause if this is not the case.
@@ -6,10 +11,28 @@
  * Throws LimitReachedException if cutoff limit is reached
  */
 
-void checkMinimality(cycle_set_t &cycset,vector<vector<vector<lit_t>>> &cycset_lits);
+vector<int> extendPerm(cycle_set_t &cycset, vector<int> &perm, int d);
 
-int permSmaller(vector<int> &invperm, int d, cycle_set_t &cycset,vector<vector<vector<lit_t>>> &cycset_lits);
+bool diagTest(cycle_set_t &cycset, vector<int> &perm, int i);
 
-int makePerms(vector<int> &perm, vector<int> toPermute_vars, vector<int> toPermute, cycle_set_t &cycset, int d,vector<vector<vector<lit_t>>> &cycset_lits);
+int fixOrBreakPerm(cycle_set_t &cycset, list<vector<int>> &fixingPerms, list<tuple<int,int,int>> &pos, vector<int> &perm, vector<int> &testPerm, int permVal, int ogVal);
 
-void addClauses(cycle_set_t &cycset,vector<vector<vector<lit_t>>> &cycset_lits);
+int getPermsOriginalUnknown(cycle_set_t &cycset, vector<int> &perm, vector<int> &testPerm, int permVal);
+
+int getPermsOriginalKnown(cycle_set_t &cycset, vector<int> &perm, vector<int> &testPerm, list<vector<int>> &fixingPerms, int invVal, int ogVal, int permVal);
+
+void possiblePermsMatrixEntry(cycle_set_t &cycset, vector<int> &perm, list<tuple<int,int,int>> &pos, int i, int j);
+
+void checkMinimality(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);
+
+int getBreakingOrFixingSymms(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
+
+int minimalityCheck(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int r, int c, int res, vector<vector<vector<lit_t>>> &cycset_lits, int depth);
+
+void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vector<vector<lit_t>>> &cycset_lits);
+
+int unknownIndexCase(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
+
+int knownIndexCase(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
+
+bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);

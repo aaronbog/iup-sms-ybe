@@ -18,7 +18,8 @@ bool diagPart = false;
 bool parallel = false;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
-bool v2 = false;
+int maxDepth = 0;
+bool doFinalCheck=false;
 vector<int> diagonal=vector<int>();
 
 int main(int argc, char const **argv)
@@ -58,12 +59,6 @@ int main(int argc, char const **argv)
                 continue;
             }
 
-        if (strcmp("--v2", argv[i]) == 0)
-            {
-                v2 = true;
-                continue;
-            }
-
         if (strcmp("--checkFreq", argv[i]) == 0)
             {
                 i++;
@@ -85,17 +80,22 @@ int main(int argc, char const **argv)
                         ss.ignore();
                 }
                 if(diagonal.size()!=problem_size){
-                    printf("ERROR: invalid argument, diagonal has length %d different from problem size %d.", diagonal.size(),problem_size);
+                    printf("ERROR: invalid argument, diagonal has length %lu different from problem size %d.", diagonal.size(),problem_size);
                     EXIT_UNWANTED_STATE;
                 }
             }
 
-        /* if (strcmp("--maxDepth", argv[i]) == 0)
+        if (strcmp("--maxDepth", argv[i]) == 0)
             {
                 i++;
-                maxDepth = atoi(argv[i]);
-                continue;
-            } */
+                if(atoi(argv[i])>0){
+                    maxDepth = atoi(argv[i]);
+                    continue;
+                } else {
+                    printf("ERROR: invalid argument, maxDepth needs to be a positive number.");
+                    EXIT_UNWANTED_STATE;
+                }
+            }
 
 
         /*printf("ERROR: invalid argument %s\n", argv[i]);
@@ -114,7 +114,7 @@ int main(int argc, char const **argv)
         stats.start = steady_clock::now();
 
         cnf_t cnf;
-        int nextFreeVariable = 1;
+        nextFreeVariable = 1;
         vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
         vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
         vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
@@ -183,11 +183,9 @@ int main(int argc, char const **argv)
         d.clear();
         makeDiagonals(parts, diags);
 
-        int totalModels=0;
-
         vector<int> numSols=vector<int>(diags.size(),0);
 
-        int i;
+        size_t i;
         
         #pragma omp parallel for shared(numSols,i,t,diags) schedule(dynamic, 1) if(diags.size()>=20) 
         for(i=0; i<diags.size(); i++)
@@ -197,17 +195,18 @@ int main(int argc, char const **argv)
             stats.start=steady_clock::now();
             
             cnf_t cnf;
-            int nextFreeVariable = 1;
+            int nextFree = 1;
 
             vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
+            vector<vector<vector<vector<lit_t>>>> cycset_lits_2 = vector<vector<vector<vector<lit_t>>>>(problem_size, vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(2,0))));
             
             vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
             vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
             vector<vector<lit_t>> ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
 
-            encodeEntries(&cnf, d, nextFreeVariable, cycset_lits);
+            encodeEntries(&cnf, d, nextFree, cycset_lits);
             
-            YBEClauses(&cnf, d, nextFreeVariable, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
+            YBEClauses(&cnf, d, nextFree, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
 
            
             
@@ -232,6 +231,8 @@ int main(int argc, char const **argv)
             solver->solve();
             numSols[i]=solver->nModels;
 
+            nextFreeVariable=max(nextFreeVariable,highestVariable);
+
             printf("Diagonal: ");
             for(auto i :d)
                 printf("%d-",i);
@@ -253,7 +254,7 @@ int main(int argc, char const **argv)
         stats.start=steady_clock::now();
         
         cnf_t cnf;
-        int nextFreeVariable = 1;
+        nextFreeVariable = 1;
 
         vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
         

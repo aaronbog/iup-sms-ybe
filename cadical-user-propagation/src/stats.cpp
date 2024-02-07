@@ -36,7 +36,7 @@ void Stats::print (Internal * internal) {
   if (internal->opts.log) all = true;
 #endif // ifdef LOGGING
 
-  if (internal->opts.profile) internal->print_profile ();
+  /*if (internal->opts.profile) internal->print_profile ();*/
 
   double t = internal->solve_time ();
 
@@ -53,7 +53,17 @@ void Stats::print (Internal * internal) {
   size_t extendbytes = internal->external->extension.size ();
   extendbytes *= sizeof (int);
 
-  SECTION ("statistics");
+  SECTION ("clauses");
+  printf("total current: %d,\tadded: %d\n",stats.current.total,stats.added.total);
+  printf("redun current: %d,\tadded: %d\n",stats.current.redundant,stats.added.redundant);
+  printf("irred current: %d,\tadded: %d\n",stats.current.irredundant,stats.added.irredundant);
+
+  SECTION ("garbage");
+  printf("clauses: %d\n",stats.garbage.clauses);
+  printf("literals: %d\n",stats.garbage.literals);
+  printf("bytes: %d\n",stats.garbage.bytes);
+
+  /* SECTION ("statistics");
 
   if (all || stats.blocked) {
   PRT ("blocked:         %15" PRId64 "   %10.2f %%  of irredundant clauses", stats.blocked, percent (stats.blocked, stats.added.irredundant));
@@ -274,7 +284,7 @@ void Stats::print (Internal * internal) {
   MSG ("%sseconds are measured in %s time for solving%s",
     tout.magenta_code (),
       internal->opts.realtime ? "real" : "process",
-    tout.normal_code ());
+    tout.normal_code ()); */
 
 #endif // ifndef QUIET
 }

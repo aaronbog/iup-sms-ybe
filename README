@@ -1,12 +1,13 @@
-This is the supplementary material of the submission "IPASIR-UP: User 
-Propagators for CDCL" to SAT'23. It contains supplement regarding the following
-tools:
+This folder contains:
 (1) CaDiCaL with IPASIRUP
 (2) SAT modulo Symmetries (SMS) solver for YBE Problem
 
-0. Unzip the three included zip files into one folder.
+0. Unzip the included zip files into one folder.
 
-1. CaDiCaL with IPASIRUP:
+1. Execute ./makestuff or
+
+
+1.a  CaDiCaL with IPASIRUP:
 --------------------------
 The solver can be found in the folder 'cadical-user-propagation'.
 To configure and build CaDiCaL with user propagators simply run:
@@ -26,7 +27,7 @@ more details and build instructions.
 - The ExternalPropagator interface can be found here:
     'cadical-user-propagation/src/cadical.hpp' in lines 976-1030.
 
-2. ybe-sms
+1.b ybe-sms
 -------------------------
 To build ybe-sms with CaDiCaL first follow the steps of (1) and then run:
 
@@ -35,7 +36,7 @@ To build ybe-sms with CaDiCaL first follow the steps of (1) and then run:
     cd build
     make
 
-The executable can be found in the folder build/src 
+3. The executable can be found in the folder build/src 
     
 
 
