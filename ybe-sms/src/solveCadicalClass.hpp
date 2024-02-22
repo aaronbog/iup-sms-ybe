@@ -52,21 +52,20 @@ protected: // virtual classes from common interface
                 for (int j = 0; j < problem_size; j++)
                     for (int k = 0; k < problem_size; k++)
                     {
-                        if(!diagPart||i!=j){
+                        if(cycset_lits[i][j][k]!=0){
                             if (solver->val(cycset_lits[i][j][k])>0)
-                        {
-                            cycset.matrix[i][j]=k;
-                            cycset.assignments[i][j][k]=True_t;
-                        } 
-                        if (solver->val(cycset_lits[i][j][k])<0)
-                        {
-                            cycset.assignments[i][j][k]=False_t;
-                        }
-                        } else {
+                            {
+                                cycset.matrix[i][j]=k;
+                                cycset.assignments[i][j][k]=True_t;
+                            } 
+                            if (solver->val(cycset_lits[i][j][k])<0)
+                            {
+                                cycset.assignments[i][j][k]=False_t;
+                            }
+                        } else if (diagPart && i==j){
                             cycset.matrix[i][j]=currentCycleSet.matrix[i][j];
                             cycset.assignments[i][j][k]=True_t;
                         }
-                         
                     } 
             return cycset;
         }
@@ -74,6 +73,10 @@ protected: // virtual classes from common interface
 
     bool is_decision(lit_t lit){
         return solver->is_decision(lit);
+    }
+
+    bool is_true(lit_t lit){
+        return solver->val(lit);
     }
 
     void addClause(const vector<lit_t> &clause, bool redundant)

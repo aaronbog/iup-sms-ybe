@@ -2,7 +2,7 @@
 
 cd cadical-user-propagation
 rm -r ./build/
-./configure
+./configure -l
 cd ./build/
 make
 cd ../../ybe-sms/

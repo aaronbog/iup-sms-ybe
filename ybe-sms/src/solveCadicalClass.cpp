@@ -31,7 +31,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     // only_propagating = false;
     solver = new CaDiCaL::Solver();
     
-    // solver->configure("plain");
+    //solver->configure("plain");
     if (!solver->configure("sat"))
         EXIT_UNWANTED_STATE
 
@@ -44,12 +44,15 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
 
     lit2entry.push_back(make_tuple(-1, -1, -1)); // dummy pair for index 0
      
-    highestEdgeVariable = (problem_size*problem_size*problem_size);
+    highestEdgeVariable = 0;
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                if(!diagPart || i!=j)
+                if(!diagPart || (i!=j&&k!=diag[i]))
+                {
                     lit2entry.push_back(make_tuple(i, j,k));
+                    highestEdgeVariable++;
+                }
 
     // add clauses to solver
     for (auto clause : cnf)
@@ -66,10 +69,14 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
         solver->add(0);
     }
 
+    
+
+    solver->write_dimacs("ybe.cnf");
+
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                if(!diagPart || i!=j)
+                if(!diagPart || (i!=j&&k!=diag[i]))
                     solver->add_observed_var(cycset_lits[i][j][k]);
 
     literal2clausePos = vector<vector<int>>(highestEdgeVariable + 1);

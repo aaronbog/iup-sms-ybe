@@ -45,6 +45,12 @@ bool CommonInterface::checkMin()
   catch (clause_t c)
   {
     stats.nSymBreakClauses+=1LL;
+    /* printf("-------------\nSymm Break:\n");
+    printCycleSet(cycset);
+    for(auto i:c){
+      printf("%d or ",i);
+    }
+    printf("\n"); */
     addClause(c,true);
     res=false;
   }
@@ -84,25 +90,40 @@ bool CommonInterface::check()
     // exclude current graph
     cycle_set_t &cs = cycset;
     vector<lit_t> clause;
+    /* printf("------------------\n");
+    printCycleSet(cycset); */
     for (int i = 0; i < problem_size; i++)
       for (int j = 0; j < problem_size; j++)
+      {
+        if(diagPart && i==j)
+              continue;
+        /* bool containsDec = false;
+        int posLit = 0; */
         for (int k = 0; k < problem_size; k++)
         {
-          if(i==j)
-            continue;
-          /* if(!is_decision(cycset_lits[i][j][k]))
-            continue; */
+          //if(!containsDec && is_decision(cycset_lits[i][j][k]))
+            //containsDec=true;
           if (cs.assignments[i][j][k] == True_t){
+            //posLit=cycset_lits[i][j][k];
+            //printf("%d = M_%d,%d,%d\n",posLit, i,j,k);
             clause.push_back(-cycset_lits[i][j][k]);
           }
-          //We can only add the positive lits, the negation are implied.
+          //We can only add the positive lits, the negations are implied.
           //This makes the added clauses smaller.
           //Only adding the decision lits does not work somehow...
           /* if (cs.assignments[i][j][k] == False_t){
             clause.push_back(cycset_lits[i][j][k]);
           } */
         }
+        /* if(containsDec){
+          clause.push_back(-posLit);
+        } */
+      }
     //printf("EXCLUDED SOL\n");
+    /* for(auto i:clause){
+      printf("%d or ",i);
+    }
+    printf("\n"); */
     addClause(clause, false);
     return false;
   }

@@ -46,8 +46,8 @@ void checkMinimality(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_
 }
 
 bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits){
-    for(int i = 0; i<=problem_size-1; i++){
-        for(int j = 0; j<=problem_size-1; j++){
+    for(int i = 0; i<problem_size; i++){
+        for(int j = 0; j<problem_size; j++){
             if(count(cycset.matrix[j].begin(), cycset.matrix[j].end(), i)>1){
                 return true;
             }
@@ -127,6 +127,10 @@ int minimalityCheck(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<
 
 void possiblePermsMatrixEntry(cycle_set_t &cycset, vector<int> &perm, list<tuple<int,int,int>> &pos, int i, int j){
     //printf("possiblePermsMatrixEntry\n");
+    //Enumerates possible permutations at this point in time taking into account:
+        //the present partially defined permutation
+        //the value Mij that could possibly be a critical index.
+
     int ogVal=cycset.matrix[i][j]; //1
     int pi=perm[i]; //0
     int pj=perm[j]; //1
@@ -145,7 +149,7 @@ void possiblePermsMatrixEntry(cycle_set_t &cycset, vector<int> &perm, list<tuple
             }
         }
         else{
-            //if indice(s) unknown possibilities are l whose s.t. M[l,pj] or M[pi,l] or M[l,l] not unassigned
+            //if indice(s) are unknown, possibilities are l whose s.t. M[l,pj] or M[pi,l] or M[l,l] is not unassigned
             if(count(perm.begin(),perm.end(),l)==0){
                 if(pj!=-1 && pi==-1 && cycset.matrix[l][pj]!=-1)
                     pos.emplace_back(make_tuple(l,pj,cycset.matrix[l][pj]));
@@ -471,6 +475,7 @@ void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vec
 {
     //printf("addClauses\n");
     vector<vector<int>> clausesToAdd;
+    //vector<vector<vector<int>>> bla = vector<vector<vector<int>>>(problem_size,vector<vector<int>>(problem_size,vector<int>(problem_size,0)));
     vector<int> toAdd;
     vector<int> invperm=vector<int>(problem_size,-1);
 
@@ -489,11 +494,11 @@ void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vec
     }
 
     /* lit_t y_0=nextFreeVariable;
-    lit_t y_1; */
+    lit_t y_1;
 
     //printf("%d,%d,%d\n",r,c,cycset.matrix[r][c]);
 
-/*     clausesToAdd.push_back(vector<int>{y_0});
+    clausesToAdd.push_back(vector<int>{y_0});
 
     for(int ri=0;ri<=r;ri++){
         for(int ci=0;ci<=problem_size-1;ci++){
@@ -553,10 +558,12 @@ void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vec
                 {
                     if(og_asg==True_t)
                         {   toAdd.push_back(-cycset_lits[ri][ci][i]); 
+                            //bla[ri][ci][i]=-1;
                             //printf("-M_%d,%d,%d, ",ri,ci,i); 
                             }
                     if(perm_asg==False_t)
                         {   toAdd.push_back(cycset_lits[extendedPerm[ri]][extendedPerm[ci]][extendedPerm[i]]); 
+                            //bla[extendedPerm[ri]][extendedPerm[ci]][extendedPerm[i]]=1;
                             //printf("M_%d,%d,%d, ",extendedPerm[ri],extendedPerm[ci],extendedPerm[i]); 
                             }
                 }
@@ -566,8 +573,35 @@ void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vec
 
     endloop:
         toAdd.push_back(cycset_lits[extendedPerm[r]][extendedPerm[c]][extendedPerm[index]]);
+        //bla[extendedPerm[r]][extendedPerm[c]][extendedPerm[index]]=1;
         //printf("M_%d,%d,%d, ",extendedPerm[r],extendedPerm[c],extendedPerm[index]);
         toAdd.push_back(-cycset_lits[r][c][index]);
+        //bla[r][c][index]=-1;
+
+        /* for(int i=0; i<problem_size; i++){
+            for(int j=0; j<problem_size; j++){
+                int count=0;
+                for(int k=0; k<problem_size;k++){
+                    if(bla[i][j][k]!=0)
+                        count++;
+                }
+                auto zero=find(bla[i][j].begin(),bla[i][j].end(),0);
+                if(zero==bla[i][j].end()){
+                    toAdd.push_back(-cycset_lits[i][j][find(bla[i][j].begin(),bla[i][j].end(),-1)-bla[i][j].begin()]);
+                } else if(count==3 && zero!=bla[i][j].end()){
+                    toAdd.push_back(-cycset_lits[i][j][zero-bla[i][j].begin()]);
+                } else {
+                    for(int h=0; h<problem_size;h++){
+                        if(bla[i][j][h]==1){
+                            toAdd.push_back(cycset_lits[i][j][h]);
+                        } else if(bla[i][j][h]==-1){
+                            toAdd.push_back(-cycset_lits[i][j][h]);
+                        }
+                    }
+                }
+            }
+        } */
+
         //printf("-M_%d,%d,%d\n",r,c,index);
         throw toAdd;
 }

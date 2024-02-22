@@ -6,7 +6,7 @@ void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vecto
 {   for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                {if(i!=j)
+                {if(i!=j && k!=d[i])
                     cycset_lits[i][j][k] = nextFree++;}
     
     for(int i=0; i<problem_size; i++)
@@ -57,19 +57,23 @@ void encodeEntries(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cyc
 
 void exactlyOne(cnf_t *cnf, vector<int> eo, int &nextFree)
 {
-    if(eo.size()<=6)
+    vector<int>toEO=vector<int>();
+    for(int i : eo){
+        if(i!=0)
+            toEO.push_back(i);
+    }
+    if(toEO.size()<=6)
     {
-        atMostOne(cnf, eo);
-        atLeastOne(cnf, eo);
+        atMostOne(cnf, toEO);
+        atLeastOne(cnf, toEO);
     }
     else
     {
-        auto p=commanderEncoding(eo, nextFree);
+        auto p=commanderEncoding(toEO, nextFree);
         for(auto cl : p.second)
             cnf->push_back(cl);
-        atLeastOne(cnf, eo);
+        atLeastOne(cnf, toEO);
     }
-    
 }
 
 void atMostOne(cnf_t *cnf, vector<int> alo)
@@ -200,7 +204,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                 for(int a = 0; a<problem_size; a++)
                     for(int b=0; b<problem_size; b++)
                     {
-                        if(i!=k || d[i]==b){
+                        if(a!=d[i] && ((i!=k&&d[i]!=b)|| (i==k&&d[i]==b))){
                             if(i!=k){
                                 cl.push_back(-cycset_lits[i][k][b]);
                             }
@@ -214,7 +218,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                             cl.clear();
                         }
 
-                        if(j!=k || d[j]==b){
+                        if(a!=d[j] && ((j!=k&&d[j]!=b)|| (j==k&&d[j]==b))){
                             if(j!=k){
                                 cl.push_back(-cycset_lits[j][k][b]);
                             }
@@ -254,9 +258,9 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                         {
                             int r = floor(a/problem_size);
                             int c = a%problem_size;
-                            if(r!=c || d[r]==b){
+                            if((r!=c&&b!=d[r])|| (r==c&&d[r]==b)){
                                 if(r!=c)
-                                    cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
+                                    cl.push_back(-cycset_lits[r][c][b]);
                                 cl.push_back(-ybe_left_lits[t][a]);
                                 if(ybe_lits[t][b]==0)
                                     ybe_lits[t][b]=nextFree++;
@@ -270,9 +274,9 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                         {
                             int r = floor(a/problem_size);
                             int c = a%problem_size;
-                            if(r!=c || d[r]==b){
+                            if((r!=c&&b!=d[r])|| (r==c&&d[r]==b)){
                                 if(r!=c)
-                                    cl.push_back(-cycset_lits[floor(a/problem_size)][a%problem_size][b]);
+                                    cl.push_back(-cycset_lits[r][c][b]);
                                 cl.push_back(-ybe_right_lits[t][a]);
                                 if(ybe_lits[t][b]==0)
                                     ybe_lits[t][b]=nextFree++;
