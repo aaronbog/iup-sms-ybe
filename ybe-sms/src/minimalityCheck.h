@@ -11,28 +11,27 @@ class LimitReachedException
  * Throws LimitReachedException if cutoff limit is reached
  */
 
-vector<int> extendPerm(cycle_set_t &cycset, vector<int> &perm, int d);
+class MinimalityChecker
+{
+public:
+    MinimalityChecker(cycle_set_t cycset, vector<vector<vector<lit_t>>> cycset_lits);
+    void checkMinimality(vector<int> &perm, vector<vector<int>> &fixingPerms, int r, int c, int res);
+    int getBreakingOrFixingSymms(vector<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
 
-bool diagTest(cycle_set_t &cycset, vector<int> &perm, int i);
 
-int fixOrBreakPerm(cycle_set_t &cycset, list<vector<int>> &fixingPerms, list<tuple<int,int,int>> &pos, vector<int> &perm, vector<int> &testPerm, int permVal, int ogVal);
-
-int getPermsOriginalUnknown(cycle_set_t &cycset, vector<int> &perm, vector<int> &testPerm, int permVal);
-
-int getPermsOriginalKnown(cycle_set_t &cycset, vector<int> &perm, vector<int> &testPerm, list<vector<int>> &fixingPerms, int invVal, int ogVal, int permVal);
-
-void possiblePermsMatrixEntry(cycle_set_t &cycset, vector<int> &perm, list<tuple<int,int,int>> &pos, int i, int j);
-
-void checkMinimality(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);
-
-int getBreakingOrFixingSymms(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
-
-int minimalityCheck(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int r, int c, int res, vector<vector<vector<lit_t>>> &cycset_lits, int depth);
-
-void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vector<vector<lit_t>>> &cycset_lits);
-
-int unknownIndexCase(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
-
-int knownIndexCase(cycle_set_t &cycset, list<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
+private:
+    cycle_set_t cycset;
+    vector<vector<vector<lit_t>>> cycset_lits;
+    int unknownIndexCase(vector<vector<int>> &fixingPerms, vector<int> &perm, int i, int j); 
+    void possibleMatrixEntryPermutations(vector<int> &perm, vector<vector<int>> &pos, int i, int j);
+    bool diagTest(vector<int> &perm, int i, int j);
+    int knownIndexCase(vector<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
+    int fixOrBreakPerm(vector<vector<int>> &fixingPerms, vector<vector<int>> &pos, vector<int> &perm, int permVal, int ogVal);
+    int fixOrBreakPerm2(vector<vector<int>> &fixingPerms, vector<int> &perm, int permVal, int ogVal, int i, int j);
+    int getPermsOriginalUnknown(vector<int> &perm, int permVal);
+    int getPermsOriginalKnown(vector<int> &perm, vector<vector<int>> &fixingPerms, int invVal, int ogVal);
+    vector<int> extendPerm(cycle_set_t &cycset, vector<int> &perm, int d);
+    void addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vector<vector<lit_t>>> &cycset_lits);
+};
 
 bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);

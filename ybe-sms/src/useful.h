@@ -42,7 +42,18 @@ typedef enum {
 typedef struct {
     std::vector<vector<int>> matrix;
     std::vector<vector<vector<truth_vals>>> assignments;
+    std::vector<vector<vector<int>>> cycset_lits;
+    std::vector<vector<vector<int>>> ordered_lits;
 } cycle_set_t;
+
+typedef struct {
+    std::vector<int> perm;
+    std::vector<int> inverse;
+} perm_t;
+
+void extendPerm(perm_t perm, int i, int j);
+void extendInvPerm(perm_t perm, int i, int j);
+perm_t newPerm();
 
 void printCycleSet(const cycle_set_t &cycset);
 void fprintCycleSet(FILE *stream, const cycle_set_t &cycset);

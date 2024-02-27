@@ -4,12 +4,14 @@
 #include "cadical.hpp"
 
 // add formula and register propagator
-CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, statistics stats)
+CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
 {
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
     this->stats=stats;
     currentCycleSet = cycle_set_t();
+    currentCycleSet.cycset_lits=lits;
+    currentCycleSet.ordered_lits=ord_lits;
     currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
     currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
     fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
@@ -42,15 +44,15 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     // register propagator first
     solver->connect_external_propagator(this);
 
-    lit2entry.push_back(make_tuple(-1, -1, -1)); // dummy pair for index 0
+    lit2entry.push_back(vector<int>{-1,-1,-1}); // dummy pair for index 0
      
     highestEdgeVariable = 0;
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                if(!diagPart || (i!=j&&k!=diag[i]))
+                if(!diagPart || (i!=j && (!smallerEncoding||k!=diag[i])))
                 {
-                    lit2entry.push_back(make_tuple(i, j,k));
+                    lit2entry.push_back(vector<int>{i,j,k});
                     highestEdgeVariable++;
                 }
 
@@ -71,12 +73,12 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
 
     
 
-    solver->write_dimacs("ybe.cnf");
+    //solver->write_dimacs("ybe.cnf");
 
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                if(!diagPart || (i!=j&&k!=diag[i]))
+                if(!diagPart || (i!=j&&(!smallerEncoding||k!=diag[i])))
                     solver->add_observed_var(cycset_lits[i][j][k]);
 
     literal2clausePos = vector<vector<int>>(highestEdgeVariable + 1);

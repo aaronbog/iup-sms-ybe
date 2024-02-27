@@ -12,7 +12,6 @@ typedef int lit_t;
 
 bool CommonInterface::propagate()
 {
-
   stats.callsPropagator+=1LL;
   auto start = steady_clock::now();
 
@@ -31,12 +30,21 @@ bool CommonInterface::propagate()
 
 bool CommonInterface::checkMin()
 {
+
   auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
+  
   try
   {
-    checkMinimality(cycset,cycset_lits);
+    if(!preCheck(cycset,cycset_lits)){
+      MinimalityChecker minchecker = MinimalityChecker(cycset,cycset_lits);
+      vector<vector<int>> fp;
+      vector<int>perm=vector<int>(problem_size,-1);
+      int found = minchecker.getBreakingOrFixingSymms(fp,perm,0,0);
+      minchecker.checkMinimality(perm,fp,0,0,found);
+      //checkMinimality(cycset,cycset_lits);
+    }
   }
   catch (LimitReachedException e)
   {

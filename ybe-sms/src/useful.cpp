@@ -117,3 +117,21 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
     perm.clear();
   }
 }
+
+perm_t newPerm(){
+  perm_t newPerm;
+  newPerm.perm=vector<int>(problem_size,-1);
+  newPerm.inverse=vector<int>(problem_size,-1);
+  return newPerm;
+}
+
+void extendPerm(perm_t perm, int i, int j){
+  perm.perm[i]=j;
+  perm.inverse[j]=i;
+};
+
+void extendInvPerm(perm_t perm, int i, int j){
+  perm.inverse[i]=j;
+  perm.perm[j]=i;
+};
+

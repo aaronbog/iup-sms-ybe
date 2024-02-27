@@ -36,6 +36,8 @@ extern const char **optionsClingo;
 extern int nOptionsClingo;
 extern bool propagateLiteralsCadical;
 extern bool checkSolutionInProp;
+extern bool smallerEncoding;
+
 extern string proofFile;
 
 extern FILE *addedClauses;

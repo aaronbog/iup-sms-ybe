@@ -16,8 +16,7 @@ private:
     bool changeInTrail = true; // checks whether the trail has changed since the last propagation step
 
     int highestEdgeVariable;
-    vector<tuple<int, int, int>> lit2entry; // get for positive literal the corresponding edge
-
+    vector<vector<int>> lit2entry; // get for positive literal the corresponding edge
     vector<vector<int>> clauses;
     int highestVariable;
     int checkMode = false; // if true solver has finished and clauses are added by the normal "incremental interface"
@@ -30,7 +29,7 @@ private:
     void fixDiag(vector<int> diag);
 public:
     CadicalSolver(cnf_t &cnf, int highestVariable);
-    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits, statistics stats);
+    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats);
     ~CadicalSolver() { solver->disconnect_external_propagator(); }
 
 protected: // virtual classes from common interface
@@ -67,6 +66,8 @@ protected: // virtual classes from common interface
                             cycset.assignments[i][j][k]=True_t;
                         }
                     } 
+            cycset.cycset_lits=currentCycleSet.cycset_lits;
+            cycset.ordered_lits=currentCycleSet.ordered_lits;
             return cycset;
         }
     }
@@ -101,18 +102,18 @@ public:
         int absLit = abs(lit);
         if (!is_fixed) // push back literal to undo if current decission literal is changed
             current_trail.back().push_back(absLit);
-        auto edge = lit2entry[absLit];
+        auto entry = lit2entry[absLit];
         if (lit > 0)
         {
-            currentCycleSet.assignments[get<0>(edge)][get<1>(edge)][get<2>(edge)] = True_t;
-            currentCycleSet.matrix[get<0>(edge)][get<1>(edge)] = get<2>(edge);
+            currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = True_t;
+            currentCycleSet.matrix[entry[0]][entry[1]] = entry[2];
         }
         else
         {
-            currentCycleSet.assignments[get<0>(edge)][get<1>(edge)][get<2>(edge)] = False_t;
+            currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = False_t;
         }
         if (is_fixed)
-            fixedCycleSet[get<0>(edge)][get<1>(edge)][get<2>(edge)] = true;
+            fixedCycleSet[entry[0]][entry[1]][entry[2]] = true;
     }
 
     void notify_new_decision_level()
@@ -127,12 +128,12 @@ public:
             auto last = current_trail.back();
             for (int l : last)
             {
-                tuple<int, int, int> entry = lit2entry[l];
-                if (fixedCycleSet[get<0>(entry)][get<1>(entry)][get<2>(entry)])
+                auto entry = lit2entry[l];
+                if (fixedCycleSet[entry[0]][entry[1]][entry[2]])
                     continue;
-                currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] = Unknown_t;
-                if (currentCycleSet.matrix[get<0>(entry)][get<1>(entry)]==get<2>(entry))
-                    currentCycleSet.matrix[get<0>(entry)][get<1>(entry)]=-1;
+                currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = Unknown_t;
+                if (currentCycleSet.matrix[entry[0]][entry[1]]==entry[2])
+                    currentCycleSet.matrix[entry[0]][entry[1]]=-1;
             }
             current_trail.pop_back();
         }
@@ -232,14 +233,14 @@ public:
         for (auto l : lastClause)
         {
             auto entry = lit2entry[abs(l)];
-            if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == Unknown_t)
+            if (currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] == Unknown_t)
             {
                 nUnknown++;
                 unassigned = l;
             }
-            else if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == True_t && l > 0)
+            else if (currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] == True_t && l > 0)
                 return 0; // already satisfied
-            else if (currentCycleSet.assignments[get<0>(entry)][get<1>(entry)][get<2>(entry)] == False_t && l < 0)
+            else if (currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] == False_t && l < 0)
                 return 0; // already satisfied
         }
 

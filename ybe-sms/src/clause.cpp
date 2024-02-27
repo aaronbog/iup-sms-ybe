@@ -6,7 +6,7 @@ void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vecto
 {   for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                {if(i!=j && k!=d[i])
+                {if(i!=j && (!smallerEncoding||k!=d[i]))
                     cycset_lits[i][j][k] = nextFree++;}
     
     for(int i=0; i<problem_size; i++)
@@ -26,6 +26,42 @@ void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vecto
                 }
             cnf->push_back(cl);
             cl.clear();
+        }
+}
+
+void encodeOrder(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits_ord, vector<vector<vector<lit_t>>> &cycset_lits)
+{   for (int i = 0; i < problem_size; i++)
+        for (int j = 0; j < problem_size; j++)
+        {
+            int prev=-1;
+            for (int k = 0; k < problem_size-1; k++)
+            {
+                if(i!=j && k!=d[i])
+                {
+                    cycset_lits_ord[i][j][k] = nextFree++;
+                    if(prev!=-1){
+                        clause_t cl;
+                        cl.push_back(-cycset_lits_ord[i][j][prev]);
+                        cl.push_back(cycset_lits_ord[i][j][k]);
+                        cnf->push_back(cl);
+                        prev=k;
+                    }
+                    clause_t cll;
+                    for(int l=0; l<=k; l++){
+                        if(l!=d[i]){
+                            clause_t cl = vector<int>{-cycset_lits[i][j][l],cycset_lits_ord[i][j][k]};
+                            cll.push_back(cycset_lits[i][j][l]);
+                            cnf->push_back(cl);
+                        }
+                    }
+                    cll.push_back(-cycset_lits_ord[i][j][k]);
+                    
+                    cnf->push_back(cll);
+                    if(prev==-1){
+                        prev=k;
+                    }
+                }
+            }
         }
 }
 
@@ -204,7 +240,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                 for(int a = 0; a<problem_size; a++)
                     for(int b=0; b<problem_size; b++)
                     {
-                        if(a!=d[i] && ((i!=k&&d[i]!=b)|| (i==k&&d[i]==b))){
+                        if((!smallerEncoding  && (i!=k || d[i]==b)) || (smallerEncoding && (a!=d[i] && ((i!=k&&d[i]!=b)|| (i==k&&d[i]==b))))){
                             if(i!=k){
                                 cl.push_back(-cycset_lits[i][k][b]);
                             }
@@ -218,7 +254,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                             cl.clear();
                         }
 
-                        if(a!=d[j] && ((j!=k&&d[j]!=b)|| (j==k&&d[j]==b))){
+                        if((!smallerEncoding && (j!=k || d[j]==b)) || (smallerEncoding && (a!=d[j] && ((j!=k&&d[j]!=b)|| (j==k&&d[j]==b))))){
                             if(j!=k){
                                 cl.push_back(-cycset_lits[j][k][b]);
                             }
@@ -258,7 +294,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                         {
                             int r = floor(a/problem_size);
                             int c = a%problem_size;
-                            if((r!=c&&b!=d[r])|| (r==c&&d[r]==b)){
+                            if((!smallerEncoding && (r!=c || d[r]==b)) || (smallerEncoding && ((r!=c&&b!=d[r])|| (r==c&&d[r]==b)))){
                                 if(r!=c)
                                     cl.push_back(-cycset_lits[r][c][b]);
                                 cl.push_back(-ybe_left_lits[t][a]);
@@ -274,7 +310,7 @@ void YBEClauses(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<l
                         {
                             int r = floor(a/problem_size);
                             int c = a%problem_size;
-                            if((r!=c&&b!=d[r])|| (r==c&&d[r]==b)){
+                            if((!smallerEncoding && (r!=c || d[r]==b)) || (smallerEncoding && ((r!=c&&b!=d[r])|| (r==c&&d[r]==b)))){
                                 if(r!=c)
                                     cl.push_back(-cycset_lits[r][c][b]);
                                 cl.push_back(-ybe_right_lits[t][a]);
