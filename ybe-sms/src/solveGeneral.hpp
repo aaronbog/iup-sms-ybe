@@ -22,7 +22,7 @@ protected:
   virtual bool is_true(lit_t lit) { EXIT_UNWANTED_STATE }
   virtual cycle_set_t getCycleSet() { EXIT_UNWANTED_STATE }
 
-  cycle_set_t currentCycleSet; // current partially defined graph 
+  cycle_set_t currentCycleSet=cycle_set_t(problem_size,cycset_lits); // current partially defined graph 
 
   // functions which are the same for all solvers, which use the previous funcitons
 private:

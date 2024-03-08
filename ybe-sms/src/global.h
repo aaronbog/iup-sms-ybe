@@ -37,6 +37,8 @@ extern int nOptionsClingo;
 extern bool propagateLiteralsCadical;
 extern bool checkSolutionInProp;
 extern bool smallerEncoding;
+extern bool propagateMincheck;
+extern bool oldBreakingClauses;
 
 extern string proofFile;
 

@@ -42,7 +42,7 @@ bool CommonInterface::checkMin()
       vector<vector<int>> fp;
       vector<int>perm=vector<int>(problem_size,-1);
       int found = minchecker.getBreakingOrFixingSymms(fp,perm,0,0);
-      minchecker.checkMinimality(perm,fp,0,0,found);
+      minchecker.checkMinimality(perm,fp,0,0,found,0);
       //checkMinimality(cycset,cycset_lits);
     }
   }

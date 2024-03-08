@@ -16,6 +16,8 @@ clock_t startOfSolving;
 bool allModels = false;
 bool diagPart = false;
 bool parallel = false;
+bool propagateMincheck = false;
+bool oldBreakingClauses = false;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
 int maxDepth = 0;
@@ -70,6 +72,18 @@ int main(int argc, char const **argv)
         if (strcmp("--smallerEncoding", argv[i]) == 0)
             {
                 smallerEncoding = true;
+                continue;
+            }
+
+        if (strcmp("--propagate", argv[i]) == 0)
+            {
+                propagateMincheck = true;
+                continue;
+            }
+
+        if (strcmp("--oldBreak", argv[i]) == 0)
+            {
+                oldBreakingClauses = true;
                 continue;
             }
 

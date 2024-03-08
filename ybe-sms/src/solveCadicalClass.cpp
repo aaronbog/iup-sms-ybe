@@ -9,11 +9,12 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
     this->stats=stats;
-    currentCycleSet = cycle_set_t();
-    currentCycleSet.cycset_lits=lits;
-    currentCycleSet.ordered_lits=ord_lits;
-    currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
-    currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
+    currentCycleSet = cycle_set_t(problem_size,lits);
+    //currentCycleSet.cycset_lits=lits;
+    //currentCycleSet.ordered_lits=ord_lits;
+    //currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
+    //currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
+    //currentCycleSet.domains=vector<vector<domain_t>>(problem_size,vector<domain_t>(problem_size,domain_t(problem_size)));
     fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
     // The root-level of the trail is always there
     current_trail.push_back(std::vector<int>());
@@ -36,6 +37,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     //solver->configure("plain");
     if (!solver->configure("sat"))
         EXIT_UNWANTED_STATE
+
+    //solver->set("shuffle", 0);
+    //solver->set("shufflequeue", 0);
 
     // solver->set("lucky", 0);
     // solver->set("log", 1);
@@ -91,10 +95,15 @@ void CadicalSolver::fixDiag(vector<int> diag)
 {
     for(int i=0; i<problem_size; i++){
         for(int k=0; k<problem_size; k++){
-            if(k!=diag[i])
+            if(k!=diag[i]){
                 currentCycleSet.assignments[i][i][k]=False_t;
-            else
+            } else {
                 currentCycleSet.assignments[i][i][k]=True_t;
+            }
+            if(k!=i)
+                currentCycleSet.domains[i][k].delete_value(diag[i]);
+            else
+                currentCycleSet.domains[i][k].dom=vector<int>{diag[i]};
             fixedCycleSet[i][i][k]=true;
         }       
     currentCycleSet.matrix[i][i]=diag[i];

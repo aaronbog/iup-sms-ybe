@@ -40,6 +40,41 @@ void printPartiallyDefinedCycleSet(const cycle_set_t &cycset)
     }
 }
 
+void printDomains(const cycle_set_t &cycset)
+{
+    for (auto row : cycset.domains)
+    {
+      for (auto dom : row)
+      {
+        dom.printDomain();
+        printf("\t");
+      }
+      printf("\n");
+    }
+}
+
+void printAssignments(const cycle_set_t &cycset)
+{
+    for (int i=0; i<problem_size; i++)
+    {
+      printf("ROW %d: ",i);
+      for (int j=0; j<problem_size; j++)
+      {
+        for (int k=0; k<problem_size; k++){
+          if(cycset.assignments[i][j][k]==True_t){
+            printf("1 ");
+          } else if (cycset.assignments[i][j][k]==False_t){
+            printf("0 ");
+          } else {
+            printf("* ");
+          }
+        }
+        printf("\t");
+      }
+      printf("\n");
+    }
+}
+
 void printCnf(cnf_t *cnf)
 {
   for(auto cl : *cnf)
@@ -128,10 +163,81 @@ perm_t newPerm(){
 void extendPerm(perm_t perm, int i, int j){
   perm.perm[i]=j;
   perm.inverse[j]=i;
-};
+}
 
 void extendInvPerm(perm_t perm, int i, int j){
   perm.inverse[i]=j;
   perm.perm[j]=i;
-};
+}
 
+vector<vector<int>> permToCyclePerm(vector<int> &perm){
+  vector<vector<int>> cycles;
+  vector<int> all = vector<int>(problem_size,-1);
+  iota(all.begin(),all.end(),0);
+  
+  while(all.size()!=0){
+    int i = *min_element(all.begin(),all.end());
+    vector<int> cycle=vector<int>();
+    while (find(cycle.begin(),cycle.end(),i)==cycle.end()){
+      cycle.push_back(i);
+      all.erase(find(all.begin(),all.end(),i));
+      i=perm[i];
+    }
+    cycles.push_back(cycle);
+  }
+  return cycles;
+}
+
+void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j){
+  for(int r=0; r<problem_size; r++){
+    int swp = og_mat[r][i];
+    og_mat[r][i]=og_mat[r][j];
+    og_mat[r][j]=swp;
+  }
+}
+void swap_matrix_rows(std::vector<vector<int>> &og_mat, int i, int j){
+  og_mat[i].swap(og_mat[j]);
+}
+
+void rotate_matrix_rows(std::vector<vector<int>> &og_mat, vector<int> cycPerm){
+  vector<int> swap = vector<int>();
+  copy(og_mat[cycPerm[0]].begin(),og_mat[cycPerm[0]].end(),back_inserter(swap));
+  int prev = 0;
+  int max = cycPerm.size();
+  for(int i=1; i<max;i++){
+    og_mat[cycPerm[prev]]=move(og_mat[cycPerm[i]]);
+    prev=i;
+  }
+  og_mat[cycPerm[prev]]=move(swap);
+}
+
+void rotate_matrix_cols(std::vector<vector<int>> &og_mat, std::vector<int> cycPerm){
+  for(int r=0; r<problem_size; r++){
+      int prev = 0;
+      int swp = og_mat[r][cycPerm[0]];
+      int max = cycPerm.size();
+      for(int i=1; i<max;i++){
+        og_mat[r][cycPerm[prev]]=og_mat[r][cycPerm[i]];
+        prev=i;
+      }
+      og_mat[r][cycPerm[prev]]=swp;
+  }
+}
+
+void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm, vector<int> invperm){
+  for(auto cyc : perm){
+    if(cyc.size()==2){
+      swap_matrix_cols(og_mat,cyc[0],cyc[1]);
+      swap_matrix_rows(og_mat,cyc[0],cyc[1]);
+    } else if (cyc.size()>2){
+      rotate_matrix_cols(og_mat,cyc);
+      rotate_matrix_rows(og_mat,cyc);
+    }
+  }
+  for(int i=0; i<problem_size; i++){
+    for(int j=0; j<problem_size; j++){
+      if(og_mat[i][j]!=-1)
+        og_mat[i][j]=invperm[og_mat[i][j]];
+    }
+  }
+}

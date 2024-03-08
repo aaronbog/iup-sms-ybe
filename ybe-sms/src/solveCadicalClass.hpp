@@ -20,7 +20,7 @@ private:
     vector<vector<int>> clauses;
     int highestVariable;
     int checkMode = false; // if true solver has finished and clauses are added by the normal "incremental interface"
-    cycle_set_t currentCycleSet;
+    cycle_set_t currentCycleSet = cycle_set_t(problem_size,cycset_lits);
     vector<vector<vector<bool>>> fixedCycleSet; // true if entry in currentMatrix is fixed.
     deque<vector<int>> current_trail; // for each decision lvl store the assigned literals (only positive version)
 
@@ -44,9 +44,9 @@ protected: // virtual classes from common interface
         }
         else
         {
-            cycle_set_t cycset;
-            cycset.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
-            cycset.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
+            cycle_set_t cycset(problem_size,currentCycleSet.cycset_lits);
+            //cycset.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
+            //cycset.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
             for (int i = 0; i < problem_size; i++)
                 for (int j = 0; j < problem_size; j++)
                     for (int k = 0; k < problem_size; k++)
@@ -56,18 +56,33 @@ protected: // virtual classes from common interface
                             {
                                 cycset.matrix[i][j]=k;
                                 cycset.assignments[i][j][k]=True_t;
+                                cycset.domains[i][j].dom=vector<int>{k};
+                                for(int l=0; l<problem_size; l++){
+                                    if(j==l)
+                                        continue;
+                                    else
+                                        cycset.domains[i][l].delete_value(k);
+                                }
                             } 
                             if (solver->val(cycset_lits[i][j][k])<0)
                             {
                                 cycset.assignments[i][j][k]=False_t;
+                                cycset.domains[i][j].delete_value(k);
                             }
                         } else if (diagPart && i==j){
                             cycset.matrix[i][j]=currentCycleSet.matrix[i][j];
                             cycset.assignments[i][j][k]=True_t;
+                            cycset.domains[i][j].dom=vector<int>{k};
+                            for(int l=0; l<problem_size; l++){
+                                if(j==l)
+                                    continue;
+                                else
+                                    cycset.domains[i][l].delete_value(k);
+                            }
                         }
                     } 
-            cycset.cycset_lits=currentCycleSet.cycset_lits;
-            cycset.ordered_lits=currentCycleSet.ordered_lits;
+            //cycset.cycset_lits=currentCycleSet.cycset_lits;
+            //cycset.ordered_lits=currentCycleSet.ordered_lits;
             return cycset;
         }
     }
@@ -107,10 +122,19 @@ public:
         {
             currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = True_t;
             currentCycleSet.matrix[entry[0]][entry[1]] = entry[2];
+            currentCycleSet.domains[entry[0]][entry[1]].dom=vector<int>{entry[2]};
+            for(int l=0; l<problem_size; l++){
+                if(entry[1]==l)
+                    continue;
+                else
+                    currentCycleSet.domains[entry[0]][l].delete_value(entry[2]);
+            }
+            
         }
         else
         {
             currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = False_t;
+            currentCycleSet.domains[entry[0]][entry[1]].delete_value(entry[2]);
         }
         if (is_fixed)
             fixedCycleSet[entry[0]][entry[1]][entry[2]] = true;
@@ -131,9 +155,29 @@ public:
                 auto entry = lit2entry[l];
                 if (fixedCycleSet[entry[0]][entry[1]][entry[2]])
                     continue;
-                currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = Unknown_t;
-                if (currentCycleSet.matrix[entry[0]][entry[1]]==entry[2])
+
+                if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==True_t){
                     currentCycleSet.matrix[entry[0]][entry[1]]=-1;
+                    currentCycleSet.domains[entry[0]][entry[1]]=domain_t(problem_size);
+                    for(int j=0;j<problem_size;j++){
+                        if(j!=entry[1]){
+                            if(currentCycleSet.matrix[entry[0]][j]!=-1)
+                                currentCycleSet.domains[entry[0]][entry[1]].delete_value(currentCycleSet.matrix[entry[0]][j]);
+                            else if (currentCycleSet.assignments[entry[0]][j][entry[2]]!=False_t)
+                                currentCycleSet.domains[entry[0]][j].add_value(entry[2]);
+                        }
+
+                        if(currentCycleSet.assignments[entry[0]][entry[1]][j]==False_t){
+                            currentCycleSet.domains[entry[0]][entry[1]].delete_value(j);
+                        }
+                    }
+                }
+
+                if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==False_t){
+                    currentCycleSet.domains[entry[0]][entry[1]].add_value(entry[2]);
+                }
+
+                currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = Unknown_t;
             }
             current_trail.pop_back();
         }
