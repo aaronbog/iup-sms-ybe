@@ -2,6 +2,7 @@
 #define SOLVE_GENERAL_H
 
 #include "useful.h"
+#include "minimalityCheck_3.h"
 
 class CommonInterface
 {
@@ -9,9 +10,11 @@ public:
   void solve(); // TODO suitable return value;
   virtual ~CommonInterface() {}
   int nModels = 0;
+  vector<int> diag;
   vector<vector<vector<lit_t>>> cycset_lits;
   statistics stats;
   FILE *output;
+  MinimalityChecker mincheck;
   // functions which must be implemented for the concrete solver
 protected:
   virtual void solve(vector<int> assumptions) { EXIT_UNWANTED_STATE }              // solve the formula under the assumption

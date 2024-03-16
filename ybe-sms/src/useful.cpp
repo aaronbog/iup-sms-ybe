@@ -153,22 +153,40 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
   }
 }
 
-perm_t newPerm(){
+/* perm_t newPerm(){
   perm_t newPerm;
   newPerm.perm=vector<int>(problem_size,-1);
   newPerm.inverse=vector<int>(problem_size,-1);
   return newPerm;
 }
 
-void extendPerm(perm_t perm, int i, int j){
-  perm.perm[i]=j;
-  perm.inverse[j]=i;
+void perm_t::extendPerm(int i, int j){
+  perm[i]=j;
+  inverse[j]=i;
 }
 
-void extendInvPerm(perm_t perm, int i, int j){
-  perm.inverse[i]=j;
-  perm.perm[j]=i;
-}
+void perm_t::extendInvPerm(int i, int j){
+  inverse[i]=j;
+  perm[j]=i;
+} */
+
+/* void perm_t::permToCyclePerm(){
+  vector<vector<int>> cycles;
+  vector<int> all = vector<int>(problem_size,-1);
+  iota(all.begin(),all.end(),0);
+  
+  while(all.size()!=0){
+    int i = *min_element(all.begin(),all.end());
+    vector<int> cycle=vector<int>();
+    while (find(cycle.begin(),cycle.end(),i)==cycle.end()){
+      cycle.push_back(i);
+      all.erase(find(all.begin(),all.end(),i));
+      i=perm[i];
+    }
+    cycles.push_back(cycle);
+  }
+  cycPerm=cycles;
+} */
 
 vector<vector<int>> permToCyclePerm(vector<int> &perm){
   vector<vector<int>> cycles;
@@ -186,6 +204,45 @@ vector<vector<int>> permToCyclePerm(vector<int> &perm){
     cycles.push_back(cycle);
   }
   return cycles;
+}
+
+void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &part){
+  vector<domain_t> parts = vector<domain_t>(problem_size,domain_t(0));
+  for(auto cyc : perm){
+    int len = cyc.size();
+    if(len!=0){
+      for(int el : cyc)
+        parts[len-1].add_value(el);
+    }
+  }
+  parts.erase(
+    remove_if(
+      parts.begin(),
+      parts.end(), 
+      [](domain_t d){return d.is_empty();}),
+      parts.end()
+  );
+
+  vector<vector<int>> mins = vector<vector<int>>(parts.size(),vector<int>(2,0));
+  
+  for(int i=0; i<parts.size();i++){
+    mins[i][1]=i;
+    mins[i][0]=*min_element(parts[i].dom.begin(),parts[i].dom.end());
+  }
+
+  sort(mins.begin(),mins.end(),[](vector<int>el1,vector<int>el2){return el1[0]<el2[0];});
+
+  for(auto el : mins){
+    bool first=true;
+    for(auto i : parts[el[1]].dom){
+      if(first)
+        {part.push_back(true);
+        first=false;}
+      else 
+        part.push_back(false);
+      elOrd.push_back(i);
+    }
+  }
 }
 
 void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j){
@@ -240,4 +297,176 @@ void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm,
         og_mat[i][j]=invperm[og_mat[i][j]];
     }
   }
+}
+
+cyclePerm_t::cyclePerm_t(){ };
+
+cyclePerm_t::cyclePerm_t(vector<int> perm){
+  auto cycles = permToCyclePerm(perm);
+
+  int index = 0;
+  for(auto cyc : cycles){
+    bool first=true;
+    for(int el : cyc){
+      if(first){
+        part.push_back(cyc.size());
+        first=false;
+      }
+      else{
+        part.push_back(0);
+      }
+      element.push_back(el);
+    }
+  }
+
+}
+
+void cyclePerm_t::print(){
+  for(auto i : element){
+    printf("%d , ", i);
+  }
+  printf("\n");
+  for(auto i : part){
+    printf("%d , ", i);
+  }
+  printf("\n");
+}
+
+vector<int> cyclePerm_t::cycle(int el){
+  vector<int> options;
+  int p=0;
+  for(int i=0; i<=el; i++){
+    if(part[i]>0)
+      p=i;
+  }
+  if(p==el && (p==problem_size-1 || part[p+1]>0)){
+    options.push_back(el);
+  } else {
+    for(int i=el; i<problem_size; i++){
+      if(i!=p && part[i]>0)
+        break;
+      options.push_back(i);
+    }
+    for(int i=p; i<el; i++){
+      options.push_back(i);
+    }
+  }
+  return options;
+}
+
+int cyclePerm_t::permOf(int el){
+  if(el+1>problem_size || part[el+1]>0){
+    for(int i = el; i>=0; i--){
+      if(part[i]>0){
+        return element[i];
+      }
+    }
+  } else
+    return element[el+1];
+}
+
+int cyclePerm_t::invPermOf(int el){
+  if(el-1<0 || part[el]>0){
+    for(int i = el; i>=0; i++){
+      if(part[i]>0){
+        return element[i-1];
+      }
+    }
+  } else
+    return element[el-1];
+}
+
+partialPerm_t::partialPerm_t(){
+}
+
+partialPerm_t::partialPerm_t(vector<int> perm){
+  auto cyc = permToCyclePerm(perm);
+  cycleToParts(cyc, element, part);
+}
+
+void partialPerm_t::print(){
+  for(auto i : element){
+    printf("%d , ", i);
+  }
+  printf("\n");
+  for(auto i : part){
+    printf("%d , ", i ? 1 : 0);
+  }
+  printf("\n");
+}
+
+bool partialPerm_t::fixed(int el){
+  if(el==problem_size-1){
+    return part[el];
+  } else {
+    return (part[el]&&part[el+1]);
+  }
+}
+
+bool partialPerm_t::fullDefined(){
+  bool full = true;
+  for(int i=0; i<problem_size; i++){
+    if(!fixed(i))
+      return false;
+  }
+  return true;
+}
+
+bool partialPerm_t::fix(int el, int img){
+  if(fixed(el) || (invPermOf(img)!=-1 && fixed(invPermOf(img)))){
+    return element[el]==img;
+  }
+  
+  if(element[el]!=img){
+    int swp = find(element.begin(),element.end(),img)-element.begin();
+    swap(element[el],element[swp]);
+  }
+        
+  if(el+1<=problem_size-1)
+      part[el+1]=true;
+  return true;
+}
+
+int partialPerm_t::permOf(int el){
+  if(fixed(el)){
+    return element[el];
+  } else
+    return -1;
+}
+
+int partialPerm_t::invPermOf(int el){
+  int invEl = find(element.begin(),element.end(),el)-element.begin();
+  if(fixed(invEl)){
+    return invEl;
+  } else
+    return -1;
+}
+
+partialPerm_t partialPerm_t::copyPerm(){
+  partialPerm_t copyPerm;
+  copy(element.begin(),element.end(), back_inserter(copyPerm.element));
+  copy(part.begin(), part.end(), back_inserter(copyPerm.part));
+  return copyPerm;
+}
+
+vector<int> partialPerm_t::options(int el){
+  vector<int> options;
+  int p=0;
+  for(int i=0; i<=el; i++){
+    if(part[i]==true)
+      p=i;
+  }
+  if(p==el && (p==problem_size-1 || part[p+1]==true)){
+    options.push_back(element[el]);
+  } else {
+    for(int i=el; i<problem_size; i++){
+      if(i!=p && part[i]==true)
+        break;
+      options.push_back(element[i]);
+    }
+    for(int i=p; i<el; i++){
+      options.push_back(element[i]);
+    }
+  }
+  return options;
 }

@@ -9,6 +9,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
     this->stats=stats;
+    this->diag=diag;
     currentCycleSet = cycle_set_t(problem_size,lits);
     //currentCycleSet.cycset_lits=lits;
     //currentCycleSet.ordered_lits=ord_lits;
@@ -90,6 +91,8 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
 
     if(diagPart)
         fixDiag(diag);
+
+    mincheck = MinimalityChecker(diag,cycset_lits);
 }
 void CadicalSolver::fixDiag(vector<int> diag)
 {

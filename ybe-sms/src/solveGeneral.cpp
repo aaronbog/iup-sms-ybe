@@ -6,7 +6,6 @@
 #include "solve.h"
 #include "solveGeneral.hpp"
 #include "cadical.hpp"
-#include "minimalityCheck.h"
 
 typedef int lit_t;
 
@@ -38,11 +37,7 @@ bool CommonInterface::checkMin()
   try
   {
     if(!preCheck(cycset,cycset_lits)){
-      MinimalityChecker minchecker = MinimalityChecker(cycset,cycset_lits);
-      vector<vector<int>> fp;
-      vector<int>perm=vector<int>(problem_size,-1);
-      int found = minchecker.getBreakingOrFixingSymms(fp,perm,0,0);
-      minchecker.checkMinimality(perm,fp,0,0,found,0);
+      mincheck.MinCheck(cycset);
       //checkMinimality(cycset,cycset_lits);
     }
   }
@@ -53,12 +48,6 @@ bool CommonInterface::checkMin()
   catch (clause_t c)
   {
     stats.nSymBreakClauses+=1LL;
-    /* printf("-------------\nSymm Break:\n");
-    printCycleSet(cycset);
-    for(auto i:c){
-      printf("%d or ",i);
-    }
-    printf("\n"); */
     addClause(c,true);
     res=false;
   }

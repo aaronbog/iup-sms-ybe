@@ -95,19 +95,48 @@ void rotate_matrix_rows(std::vector<vector<int>> &og_mat, vector<int> perm);
 void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j);
 void swap_matrix_rows(std::vector<vector<int>> &og_mat, int i, int j);
 void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm, std::vector<int> invperm);
-
-typedef struct {
+vector<domain_t> cycleToParts(vector<vector<int>> &perm);
+/* typedef struct {
     std::vector<int> perm;
     std::vector<int> inverse;
     std::vector<vector<int>> cycPerm;
-} perm_t;
+
+    void extendPerm(int i, int j);
+    void extendInvPerm(int i, int j);
+    void permToCyclePerm();
+} perm_t; */
+
+typedef struct partialPerm_t{
+    std::vector<int> element;
+    std::vector<bool> part;
+
+    partialPerm_t(std::vector<int> perm);
+    partialPerm_t();
+    partialPerm_t copyPerm();
+    int permOf(int p);
+    vector<int> options(int p);
+    int invPermOf(int p);
+    bool fixed(int p);
+    bool fix(int p, int pp);
+    void print();
+    bool fullDefined();
+} partialPerm_t;
+
+typedef struct cyclePerm_t{
+    std::vector<int> element;
+    std::vector<int> part;
+
+    cyclePerm_t(std::vector<int> perm);
+    cyclePerm_t();
+    int permOf(int p);
+    int invPermOf(int p);
+    vector<int> cycle(int el);
+    void print();
+} cyclePerm_t;
+
+//perm_t newPerm();
 
 vector<vector<int>> permToCyclePerm(vector<int> &perm);
-
-void extendPerm(perm_t perm, int i, int j);
-void extendInvPerm(perm_t perm, int i, int j);
-perm_t newPerm();
-
 void printCycleSet(const cycle_set_t &cycset);
 void fprintCycleSet(FILE *stream, const cycle_set_t &cycset);
 void printPartiallyDefinedCycleSet(const cycle_set_t &cycset);
@@ -115,5 +144,5 @@ void printDomains(const cycle_set_t &cycset);
 void printAssignments(const cycle_set_t &cycset);
 void part(int n, vector<int>& v, int level, vector<vector<int>>& parts);
 void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations);
-
+void cycleToParts(vector<vector<int>> &perm, vector<int> &ord, vector<bool> &part);
 #endif

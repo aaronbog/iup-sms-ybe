@@ -36,6 +36,33 @@ MinimalityChecker::MinimalityChecker(cycle_set_t cycset, vector<vector<vector<li
     printAssignments(cycset); */
 }
 
+MinimalityChecker::MinimalityChecker(){
+    return;
+}
+
+MinimalityChecker::MinimalityChecker(vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits){
+    this->cycset_lits=cycset_lits;
+    this->diag=diag;
+    if(diagPart){
+        diagIsId=true;
+        for(int i=0; i<problem_size; i++){
+            if(diag[i]!=i)
+                diagIsId=false;
+        }
+    } else
+        diagIsId=true;
+}
+
+void MinimalityChecker::MinCheck(cycle_set_t cycset){
+    this->cycset=cycset;
+    vector<vector<int>> fp;
+    vector<int>perm=vector<int>(problem_size,-1);
+    /* printf("-------------------------\n");
+    printPartiallyDefinedCycleSet(cycset); */
+    int found = getBreakingOrFixingSymms(fp,perm,0,0);
+    checkMinimality(perm,fp,0,0,found,0);
+}
+
 //Backtracking algorithm
 //Creates search tree over possible permutations taking the cycle set into consideration
 //starts with an empty permutation and refines it by iterating over the cycle set
@@ -44,8 +71,37 @@ MinimalityChecker::MinimalityChecker(cycle_set_t cycset, vector<vector<vector<li
 //  If all permutations are bigger: no symmetries to be found here
 
 void MinimalityChecker::checkMinimality(vector<int> &perm, vector<vector<int>> &fixingPerms, int r, int c, int res, int d){
-    if(res==1)
+    /* for(int i=0; i<d;i++){
+        printf("*");
+    }
+    printf("Mincheck level %d\n",d);
+    for(int i=0; i<d;i++){
+        printf("*");
+    }
+    printf("Perm: ");
+    for(int i=0; i<problem_size;i++){
+        printf("p(%d)=%d, ",i,perm[i]);
+    }
+    printf("\n");
+    for(int i=0; i<d;i++){
+        printf("*");
+    }
+    printf("FixingPerms:\n");
+    for(auto p : fixingPerms){
+        for(int i=0; i<d;i++){
+            printf("*");
+        }
+        for(int i=0; i<problem_size;i++){
+            printf("p(%d)=%d, ",i,p[i]);
+        }
+        printf("\n");
+    } */
+
+    if(res==1){
+        printf("HIER\n");
         addClauses(cycset,perm,r,c,cycset_lits);
+    }
+        
     
     if(res==0){
         int nextr=r;
@@ -150,6 +206,46 @@ void MinimalityChecker::possibleMatrixEntryPermutations(vector<int> &perm, vecto
     }
 }
 
+
+/* void MinimalityChecker::possibleMatrixEntryPermutations(vector<int> &perm, vector<vector<int>> &pos, int i, int j){
+    //Enumerates possible permutations at this point in time taking into account:
+        //the partially defined permutation
+        //the partially defined cycleset
+        //the current cycleset entry (all previous entries are fixed by the symmetry)
+
+    int ogVal=cycset.matrix[i][j]; //1
+    int pi=perm[i]; //0
+    int pj=perm[j]; //1
+
+    if(pi!=-1 && pj!=-1){
+        for(int l=0; l<problem_size; l++){
+            if(ogVal!=-1){
+                if(perm[l]==-1 && l<=ogVal)
+                    pos.push_back(vector<int>{pi,pj,l});
+            } else {
+                if(perm[l]==-1)
+                    pos.push_back(vector<int>{pi,pj,l});
+            }
+        }
+    } else{
+        if(pj!=-1 && pi==-1){
+            for(int l : initialPart[i].dom)
+                if(cycset.matrix[l][pj]!=-1 && count(perm.begin(),perm.end(),l)==0)
+                    pos.push_back(vector<int>{l,pj,cycset.matrix[l][pj]});
+        }
+        else if(pj==-1 && pi!=-1){
+            for(int l : initialPart[j].dom)
+                if(cycset.matrix[pi][l]!=-1 && count(perm.begin(),perm.end(),l)==0)
+                    pos.push_back(vector<int>{pi,l,cycset.matrix[pi][l]});
+        }
+        else if(pi==-1 && pj==-1){
+            for(int l : initialPart[i].dom)
+                if(cycset.matrix[l][l]!=-1 && count(perm.begin(),perm.end(),l)==0)
+                    pos.push_back(vector<int>{l,l,cycset.matrix[l][l]});
+        }
+    }
+} */
+
 int MinimalityChecker::unknownIndexCase(vector<vector<int>> &fixingPerms, vector<int> &perm, int r, int c){
 
     int pr=perm[r];
@@ -217,7 +313,8 @@ int MinimalityChecker::permFullyDefinedCheck(vector<int> &perm, int i, int j){
             int ogval = cycset.matrix[r][c];
             int permval = permMat[r][c];
             if(ogval==-1){
-                if(permval<*min_element(cycset.domains[r][c].dom.begin(),cycset.domains[r][c].dom.end())){
+                int minog = *min_element(cycset.domains[r][c].dom.begin(),cycset.domains[r][c].dom.end());
+                if((permval!=-1 || (oldBreakingClauses&&propagateMincheck))  && permval<minog){
                     addClauses(cycset,perm,r,c,cycset_lits);
                     break;
                 } else {
@@ -236,8 +333,10 @@ int MinimalityChecker::permFullyDefinedCheck(vector<int> &perm, int i, int j){
                         break;
                     }
                 } else {
-                    fixes = -1;
-                    break;
+                    if(ogval!=problem_size-1){
+                        fixes = -1;
+                        break;
+                    }
                 }
             }
         }
@@ -268,7 +367,7 @@ int MinimalityChecker::knownIndexCase(vector<vector<int>> &fixingPerms, vector<i
 
     //M[p[i],p[j]] is undefinded, we can only continue if M[i,j] = problem_size-1.
     else {
-        if(!propagateMincheck && ogVal==problem_size-1){
+        if(ogVal==problem_size-1){
             fixingPerms.push_back(perm);
             return 0;
         } else 
@@ -347,7 +446,7 @@ int MinimalityChecker::knownInvCase(vector<vector<int>> &fixingPerms, vector<int
                 return -1;
         } else {
             if(propagateMincheck){
-                int ogMax = *max_element(cycset.domains[i][j].dom.begin(),cycset.domains[i][j].dom.end());
+                int ogMax = *min_element(cycset.domains[i][j].dom.begin(),cycset.domains[i][j].dom.end());
                 if(invVal<ogMax)
                     return 1;
             } else {
@@ -447,7 +546,8 @@ vector<int> MinimalityChecker::extendPerm(cycle_set_t &cycset, vector<int> &perm
 
 void MinimalityChecker::addClauses(cycle_set_t &cycset, vector<int> &perm, int r, int c, vector<vector<vector<lit_t>>> &cycset_lits)
 {
-    /* printf("ADD CLAUSES %d,%d\n",r,c);
+    //printf("ADD CLAUSES %d,%d\n",r,c);
+    /*
     printPartiallyDefinedCycleSet(cycset); */
 
     vector<int> toAdd;
@@ -540,18 +640,18 @@ void MinimalityChecker::addClauses(cycle_set_t &cycset, vector<int> &perm, int r
 
                 if(ri==extendedPerm[ri]&&ci==extendedPerm[ci]&&og_val==perm_val){
                     toAdd.push_back(-cycset_lits[ri][ci][og_val]);
-                    printf("-M_%d_%d_%d, ",ri,ci,og_val);
+                    //printf("-M_%d_%d_%d, ",ri,ci,og_val);
                 } else if(og_val==-1){
                     toAdd.push_back(-cycset_lits[extendedPerm[ri]][extendedPerm[ci]][perm_val]);
-                    printf("-M_%d_%d_%d, ",extendedPerm[ri],extendedPerm[ci],problem_size-1);
+                    //printf("-M_%d_%d_%d, ",extendedPerm[ri],extendedPerm[ci],problem_size-1);
                 } else if (invPermval==-1) {
                     toAdd.push_back(-cycset_lits[ri][ci][problem_size-1]);
-                    printf("-M_%d_%d_%d, ",ri,ci,0);
+                    //printf("-M_%d_%d_%d, ",ri,ci,0);
                 } else {
                     toAdd.push_back(-cycset_lits[ri][ci][og_val]);
-                    printf("-M_%d_%d_%d, ",ri,ci,og_val);
+                    //printf("-M_%d_%d_%d, ",ri,ci,og_val);
                     toAdd.push_back(-cycset_lits[extendedPerm[ri]][extendedPerm[ci]][perm_val]);
-                    printf("-M_%d_%d_%d, ",extendedPerm[ri],extendedPerm[ci],perm_val);
+                    //printf("-M_%d_%d_%d, ",extendedPerm[ri],extendedPerm[ci],perm_val);
                 }
 
                 if(ri==r && ci==c)
@@ -561,22 +661,22 @@ void MinimalityChecker::addClauses(cycle_set_t &cycset, vector<int> &perm, int r
 
         endloopNew:
             if(cycset.matrix[r][c]==-1){
-                printf("\n");
-                printf("Excluding: \n");
+                /* printf("\n");
+                printf("Excluding: \n"); */
                 vector<vector<int>> clauses;
                 for(auto i : toExclude){
                     vector<int> cl;
                     copy(toAdd.begin(),toAdd.end(),back_inserter(cl));
                     cl.push_back(-cycset_lits[extendedPerm[r]][extendedPerm[c]][cycset.matrix[extendedPerm[r]][extendedPerm[c]]]);
-                    printf("-M_%d_%d_%d, ",extendedPerm[r],extendedPerm[c],cycset.matrix[extendedPerm[r]][extendedPerm[c]]);
+                    //printf("-M_%d_%d_%d, ",extendedPerm[r],extendedPerm[c],cycset.matrix[extendedPerm[r]][extendedPerm[c]]);
                     cl.push_back(-cycset_lits[r][c][i]);
-                    printf("-M_%d_%d_%d, ",r,c,i);
-                    printf("\n");
+                    /* printf("-M_%d_%d_%d, ",r,c,i);
+                    printf("\n"); */
                     clauses.push_back(cl);
                 }
                 throw clauses;
             } else
-                {printf("\n");
+                {//printf("\n");
                 throw toAdd;}
 
     }
