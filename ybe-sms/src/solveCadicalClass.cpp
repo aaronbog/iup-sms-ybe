@@ -2,6 +2,8 @@
 #include "global.h"
 #include "solveCadicalClass.hpp"
 #include "cadical.hpp"
+#include "minCheck_V1.h"
+#include "minCheck_V2.h"
 
 // add formula and register propagator
 CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
@@ -92,7 +94,12 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     if(diagPart)
         fixDiag(diag);
 
-    mincheck = MinimalityChecker(diag,cycset_lits);
+    if(minCheckOld)
+        mincheck = new MinCheck_V1(diag,cycset_lits);
+    else
+        mincheck = new MinCheck_V2(diag,cycset_lits);
+
+    //mincheck = MinimalityChecker(diag,cycset_lits);
 }
 void CadicalSolver::fixDiag(vector<int> diag)
 {
@@ -122,7 +129,7 @@ void CadicalSolver::solve(vector<int> assumptions)
             solver->assume(lit);
         //solver->statistics();
         //solver->resources();
-    } while (solver->solve() == 10 && !check_solution());
+    } while (solver->solve() == 10);
     fclose(output);
 }
 

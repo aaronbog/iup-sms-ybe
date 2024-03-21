@@ -1,13 +1,12 @@
-#include "minimalityCheck_3.h"
+#include "minCheckCommon.h"
 #include "global.h"
 #include<tuple>
 #include<algorithm>
 #include<set>
 #include<list>
-#include<queue>
 #include<iterator>
 
-bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits){
+bool MinCheckCommon::preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits){
     for(int i = 0; i<=problem_size-1; i++){
         for(int j = 0; j<=problem_size-1; j++){
             if(count(cycset.matrix[j].begin(), cycset.matrix[j].end(), i)>1){
@@ -18,195 +17,8 @@ bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits){
     return false;
 }
 
-MinimalityChecker::MinimalityChecker(cycle_set_t cycset, vector<vector<vector<lit_t>>> cycset_lits){
-    this->cycset=cycle_set_t(problem_size,cycset_lits);
-    this->cycset=cycset;
-    this->cycset_lits=cycset_lits;
-    if(diagPart){
-        diagIsId=true;
-        for(int i=0; i<problem_size; i++){
-            if(cycset.matrix[i][i]!=i)
-                diagIsId=false;
-        }
-    } else
-        diagIsId=true;
-}
 
-MinimalityChecker::MinimalityChecker(){
-    return;
-}
-
-MinimalityChecker::MinimalityChecker(vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits){
-    this->cycset_lits=cycset_lits;
-    this->diag=cyclePerm_t(diag);
-
-    if(diagPart){
-        diagIsId=true;
-        for(int i=0; i<problem_size; i++){
-            if(this->diag.permOf(i)!=i)
-                diagIsId=false;
-        }
-    } else
-        diagIsId=true;
-
-    initialPart = partialPerm_t(diag);
-}
-
-void MinimalityChecker::MinCheck(cycle_set_t cycset){
-    this->cycset=cycset;
-    checkMinimality(initialPart, 0);
-}
-
-//Backtracking algorithm
-void MinimalityChecker::checkMinimality(partialPerm_t &perm, int r){
-
-    auto options = perm.options(r);
-
-    vector<partialPerm_t> propagated_options;
-
-    filterOptions(perm, options, r, propagated_options);
-
-    for(auto option : propagated_options){
-        if(option.fullDefined()){
-            permFullyDefinedCheck(option.element,0,r);
-            continue;
-        }
-        
-        if(r<problem_size-1){
-            checkMinimality(option,r+1);
-        }
-    }
-}
-
-bool MinimalityChecker::propagateDecision(partialPerm_t &perm, int r){
-    int dec = perm.element[r];
-    auto cycle_og = diag.cycle(r);
-
-    //ensure cycles match == ensure diag is fixed
-
-    if(dec==r){
-        for(int i=1; i<cycle_og.size(); i++){
-            bool fixed = perm.fix(cycle_og[i],cycle_og[i]);
-            if(!fixed)
-                return false;
-        }
-        return true;
-    } else if(find(cycle_og.begin(),cycle_og.end(),dec)!=cycle_og.end()){
-        
-        int dist = find(cycle_og.begin(),cycle_og.end(),dec)-cycle_og.begin();
-
-        int size = cycle_og.size();
-        for(int i=1; i<size; i++){
-            bool fixed = perm.fix(cycle_og[i],cycle_og[(i+dist)%size]);
-            if(!fixed)
-                return false;
-        }
-        return true;
-    } else { 
-        auto cycle_perm = diag.cycle(dec);
-        if(cycle_perm.size()!=cycle_og.size())
-            return false;
-        for(int i=1; i<cycle_og.size();i++){
-            bool fixed=perm.fix(cycle_og[i],cycle_perm[i]);
-            if(!fixed)
-                return false;
-        }
-        return true;
-    }
-}
-
-bool MinimalityChecker::fixAndPropagate(partialPerm_t &perm, int i, int j){
-        bool fixed = perm.fix(i,j);
-
-        if(!diagIsId && fixed)
-            fixed=fixed&&propagateDecision(perm,i);
-        
-        return fixed;
-}
-
-void MinimalityChecker::filterOptions(partialPerm_t &perm, vector<int> &options, int r, vector<partialPerm_t> &options_prop){
-    for(int i=0; i<options.size();i++){
-        partialPerm_t copyPerm = perm.copyPerm();
-
-        bool fixed = fixAndPropagate(copyPerm,r,options[i]);
-        
-        if(!fixed)
-            continue;
-
-        int ogVal = cycset.matrix[0][r];
-        int permVal = cycset.matrix[copyPerm.permOf(0)][copyPerm.permOf(r)];
-        int invVal = permVal==-1 ? -1 : copyPerm.invPermOf(permVal);
-
-        //M[i,j] unknown
-        if(ogVal==-1){
-            int minog = *min_element(cycset.domains[0][r].dom.begin(),cycset.domains[0][r].dom.end());
-            //p^-1 M[p(i),p(j)] known
-            //If less than min og, breaking perm found, else skip.
-            if(invVal!=-1){
-                if(invVal<=minog){
-                    addClauses(copyPerm.element,0,r);
-                } else {
-                    continue;
-                }
-            //p^-1 M[p(i),p(j)] unknown
-            // if M[p(i),p(j)] known, extend perm s.t. p^-1 M[p(i),p(j)] <= min M[i,j]
-            // else skip.
-            } else {
-                if(permVal!=-1){
-                    partialPerm_t invFixed = inverseUnkown(copyPerm,minog,permVal);
-                    if(invFixed.invPermOf(permVal)!=-1)
-                        addClauses(invFixed.element, 0,r);
-                }
-            }
-        
-        //M[i,j] known
-        } else {
-            //p^-1 M[p(i),p(j)] known
-            // check
-            if(invVal!=-1){
-                if(invVal<ogVal)
-                    addClauses(copyPerm.element,0,r); 
-                else if (invVal==ogVal)
-                    options_prop.push_back(copyPerm);
-            //p^-1 M[p(i),p(j)] unknown
-            // if M[p(i),p(j)] known, extend perm s.t. p^-1 M[p(i),p(j)] <= M[i,j]
-            // else skip.
-            } else {
-                if(permVal!=-1){
-                    partialPerm_t invFixed = inverseUnkown(copyPerm,ogVal,permVal);
-                    int inv = invFixed.invPermOf(permVal);
-                    if(inv==ogVal)
-                        options_prop.push_back(invFixed);
-                    else if(inv!=-1 && inv<ogVal)
-                        addClauses(invFixed.element,0,r);
-                } else {
-                    if(ogVal==problem_size-1){
-                        options_prop.push_back(copyPerm);
-                    }
-                }
-            }
-        }
-    }
-}
-
-partialPerm_t MinimalityChecker::inverseUnkown(partialPerm_t &perm, int ogVal, int permVal){
-    for(int j=0;j<=ogVal;j++){
-        if(perm.fixed(j))
-            continue;
-        auto options = perm.options(j);
-        if(find(options.begin(),options.end(),permVal)!=options.end()){
-            partialPerm_t copyPerm = perm.copyPerm();
-
-            bool fixed = fixAndPropagate(copyPerm, j, permVal);
-
-            if(fixed)
-                return copyPerm;
-        }
-    }
-    return perm;
-}
-
-bool MinimalityChecker::permIsId(vector<int> &perm){
+bool MinCheckCommon::permIsId(vector<int> &perm){
     vector<int> id = vector<int>(problem_size,-1);
     iota(id.begin(),id.end(),0);
     if(perm==id)
@@ -218,7 +30,7 @@ bool MinimalityChecker::permIsId(vector<int> &perm){
         return false;
 }
 
-int MinimalityChecker::permFullyDefinedCheck(vector<int> &perm, int i, int j){
+int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
     bool permId=true;
 
     if(permIsId(perm))
@@ -242,7 +54,7 @@ int MinimalityChecker::permFullyDefinedCheck(vector<int> &perm, int i, int j){
             int permval = permMat[r][c];
             if(ogval==-1){
                 int minog = *min_element(cycset.domains[r][c].dom.begin(),cycset.domains[r][c].dom.end());
-                if(permval!=-1&&permval<=minog){
+                if(permval!=-1&&permval<minog){
                     addClauses(perm,r,c);
                     break;
                 } else {
@@ -274,15 +86,8 @@ int MinimalityChecker::permFullyDefinedCheck(vector<int> &perm, int i, int j){
     return -1;
 }
 
-void MinimalityChecker::addClauses(vector<int> &perm, int r, int c)
+void MinCheckCommon::addClauses(vector<int> &perm, int r, int c)
 {
-    /* printf("ADD BREAKING CLAUSE %d %d", r,c);
-    printPartiallyDefinedCycleSet(cycset);
-    printf("Breaking perm:");
-    for(int i : perm){
-        printf("%d, ",i);
-    }
-    printf("\n"); */
 
     vector<int> toAdd;
     vector<int> invperm=vector<int>(problem_size,-1);

@@ -23,6 +23,7 @@ bool checkSolutionInProp = false;
 int maxDepth = 0;
 bool doFinalCheck=false;
 bool smallerEncoding=false;
+bool minCheckOld = false;
 vector<int> diagonal=vector<int>();
 
 int main(int argc, char const **argv)
@@ -86,6 +87,13 @@ int main(int argc, char const **argv)
                 oldBreakingClauses = true;
                 continue;
             }
+
+        if (strcmp("--oldMinCheck", argv[i]) == 0)
+            {
+                minCheckOld = true;
+                continue;
+            }
+
 
         if(strcmp("--diag", argv[i])==0)
             {

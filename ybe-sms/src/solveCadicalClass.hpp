@@ -197,20 +197,6 @@ public:
         return true;
     }
 
-    bool check_solution()
-    {
-        //printf("check_solution, checkFinal:%d\n",doFinalCheck);
-        if (!checkSolutionInProp || doFinalCheck)
-        {
-            checkMode = true;
-            bool res = check();
-            checkMode = false;
-            //doFinalCheck=false;
-            return res;
-        }
-        return true;
-    }
-
     bool cb_has_external_clause()
     {
         // PRINT_CURRENT_LINE

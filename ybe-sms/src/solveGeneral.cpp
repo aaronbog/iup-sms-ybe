@@ -36,15 +36,15 @@ bool CommonInterface::checkMin()
   
   try
   {
-    if(!preCheck(cycset,cycset_lits)){
-      mincheck.MinCheck(cycset);
+    if(!mincheck->preCheck(cycset,cycset_lits)){
+      mincheck->MinCheck(cycset);
       //checkMinimality(cycset,cycset_lits);
     }
   }
-  catch (LimitReachedException e)
+  /* catch (LimitReachedException e)
   {
     printf("Limit reached\n");
-  }
+  } */
   catch (clause_t c)
   {
     stats.nSymBreakClauses+=1LL;

@@ -10,6 +10,7 @@ extern int problem_size;
 extern int checkFreq;
 extern int maxDepth;
 extern bool doFinalCheck;
+extern bool minCheckOld;
 
 
 //extern vector<vector<vector<lit_t>>> cycset_lits;
