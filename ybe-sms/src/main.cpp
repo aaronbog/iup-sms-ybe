@@ -28,6 +28,9 @@ vector<int> diagonal=vector<int>();
 
 int main(int argc, char const **argv)
 {
+
+    srand((unsigned) time(NULL));
+    
     // argument parsing
     for (int i = 1; i < argc; i++)
     {

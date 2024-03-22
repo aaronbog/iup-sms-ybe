@@ -54,6 +54,7 @@ void MinCheck_V2::checkMinimality(partialPerm_t &perm, int r){
     //filterOptions(perm, options, r, propagated_options, rows);
     filterOptions(perm, options, r, propagated_options);
 
+    //breadth first slower
     /* while(!propagated_options.empty()){
         partialPerm_t option = propagated_options.front();
         int row = rows.front();
@@ -198,6 +199,21 @@ void MinCheck_V2::filterOptions(partialPerm_t &perm, vector<int> &options, int r
                         /* {options_prop.push(copyPerm);
                         rows.push(r);} */
                     }
+                    /* else{
+                        for(int opt=0; opt<ogVal;opt++){
+                            int permOpt = copyPerm.permOf(opt);
+                            if(find(cycset.domains[copyPerm.permOf(0)][copyPerm.permOf(r)].dom.begin(),cycset.domains[copyPerm.permOf(0)][copyPerm.permOf(r)].dom.end(),permOpt)!=cycset.domains[copyPerm.permOf(0)][copyPerm.permOf(r)].dom.end()){
+                                //DAS NIE OKE WANT DAN IS MATRIX NIET MINIMAAL GEGEVEN DEZE PERMUTATIE
+                            }
+                        }
+                        printf("--------------------------\n");
+                        printf("PROBLEEMGEVALLETJE\n");
+                        diag.print();
+                        printf("--\n");
+                        copyPerm.print();
+                        printf("og = %d\n",ogVal);
+                        cycset.domains[copyPerm.permOf(0)][copyPerm.permOf(r)].printDomain();
+                    } */
                 }
             }
         }

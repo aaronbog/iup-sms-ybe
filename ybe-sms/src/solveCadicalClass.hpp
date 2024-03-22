@@ -116,8 +116,9 @@ public:
         changeInTrail = true;
         int absLit = abs(lit);
         if (!is_fixed) // push back literal to undo if current decission literal is changed
-            current_trail.back().push_back(absLit);
+            {current_trail.back().push_back(absLit);}
         auto entry = lit2entry[absLit];
+        //printf("Assigned %d %d = %d to %d\n",entry[0],entry[1],entry[2],lit>0?1:0);
         if (lit > 0)
         {
             currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = True_t;
@@ -147,18 +148,25 @@ public:
 
     void notify_backtrack(size_t new_level)
     {
+        /* printf("BACKTRACK\n");
+        printPartiallyDefinedCycleSet(currentCycleSet);
+        printDomains(currentCycleSet);
+        printf("----------\n"); */
         while (current_trail.size() > new_level + 1)
         {
             auto last = current_trail.back();
             for (int l : last)
             {
                 auto entry = lit2entry[l];
+                //printf("Entry = %d %d = %d\n",entry[0],entry[1],entry[2]);
                 if (fixedCycleSet[entry[0]][entry[1]][entry[2]])
                     continue;
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==True_t){
+                    //printf("Reset %d %d = %d was 1\n",entry[0],entry[1],entry[2]);
                     currentCycleSet.matrix[entry[0]][entry[1]]=-1;
                     currentCycleSet.domains[entry[0]][entry[1]]=domain_t(problem_size);
+                    
                     for(int j=0;j<problem_size;j++){
                         if(j!=entry[1]){
                             if(currentCycleSet.matrix[entry[0]][j]!=-1)
@@ -171,16 +179,33 @@ public:
                             currentCycleSet.domains[entry[0]][entry[1]].delete_value(j);
                         }
                     }
+                    /* printDomains(currentCycleSet);
+                    printf("----\n"); */
                 }
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==False_t){
+                    //printf("Reset %d %d = %d was 0\n",entry[0],entry[1],entry[2]);
                     currentCycleSet.domains[entry[0]][entry[1]].add_value(entry[2]);
+                    //printDomains(currentCycleSet);
+                    //printf("----\n");
                 }
 
                 currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = Unknown_t;
             }
             current_trail.pop_back();
         }
+        //printDomains(currentCycleSet);
+        /* for(int i=0;i<problem_size;i++){
+            for(int j=0; j<problem_size;j++){
+                if(i==j)
+                    continue;
+                for(int k=0;k<problem_size;k++){
+                    if(k!=currentCycleSet.matrix[i][i])
+                        printf("%d, ", i,j,k,currentCycleSet.assignments[i][j][k]);
+                }
+            }
+        } */
+        //printf("------------------------------------------\n");
     }
 
     // currently not checked in propagator but with the normal incremental interface to allow adding other literals or even new once.
@@ -234,7 +259,29 @@ public:
     }
 
     // functions need to be defined
-    int cb_decide() { return 0; }
+    int cb_decide() {
+        //cycle_set_t cyc = getCycleSet();
+        for(int i=0; i<problem_size; i++){
+            for(int j=0; j<problem_size; j++){
+                if(i!=j && currentCycleSet.matrix[i][j]==-1){
+                    int max = *min_element(currentCycleSet.domains[i][j].dom.begin(),currentCycleSet.domains[i][j].dom.end());
+                    return cycset_lits[i][j][max];
+                }
+            }
+        }
+        return 0;
+        /* vector<int> dom_sizes;
+        for(int i=0; i<problem_size; i++){
+            for(int j=0; j<problem_size; j++){
+                dom_sizes.push_back(currentCycleSet.domains[i][j].dom.size());
+            }
+        }
+        int max_index = distance(dom_sizes.begin(),max_element(dom_sizes.begin(), dom_sizes.end()));
+        int row = max_index/problem_size;
+        int col = max_index%problem_size;
+        int max = *max_element(currentCycleSet.domains[row][col].dom.begin(),currentCycleSet.domains[row][col].dom.end());
+        return cycset_lits[row][col][max]; */
+    }
 
     int cb_propagate()
     {

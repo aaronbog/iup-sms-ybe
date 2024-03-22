@@ -19,13 +19,16 @@ void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vecto
         {
             if(d[i]==k)
                 continue;
-            clause_t cl;
+
+            vector<int> to_encode;
+            //clause_t cl;
             for(int j=0; j<problem_size; j++)
                 {if(j!=i)
-                    cl.push_back(cycset_lits[i][j][k]);
+                    to_encode.push_back(cycset_lits[i][j][k]);
                 }
-            cnf->push_back(cl);
-            cl.clear();
+            exactlyOne(cnf,to_encode,nextFree);
+            /* cnf->push_back(cl);
+            cl.clear(); */
         }
 }
 

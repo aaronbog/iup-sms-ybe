@@ -16,7 +16,7 @@ bool CommonInterface::propagate()
 
   bool res;
 
-  if ((stats.callsPropagator % checkFreq*1LL == 0) && checkSolutionInProp)
+  if ((rand() % checkFreq == 0) && checkSolutionInProp)
   {
     res=checkMin();
   }
