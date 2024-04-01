@@ -43,6 +43,7 @@ MinCheck_V1::MinCheck_V1(vector<int> diag, vector<vector<vector<lit_t>>> cycset_
 
 void MinCheck_V1::MinCheck(cycle_set_t cycset){
     this->cycset=cycset;
+    this->depth=0;
     vector<vector<int>> fp;
     vector<int>perm=vector<int>(problem_size,-1);
     /* printf("-------------------------\n");
@@ -66,8 +67,12 @@ void MinCheck_V1::checkMinimality(vector<int> &perm, vector<vector<int>> &fixing
             return;
         addClauses(extendedPerm,r,c);
     }
+
+    depth++;
+    if(!final && depth>maxDepth)
+        throw LimitReachedException(); 
+
         
-    
     if(res==0){
         int nextr=r;
         int nextc=c;
@@ -313,7 +318,8 @@ int MinCheck_V1::knownInvCase(vector<vector<int>> &fixingPerms, vector<int> &per
                 return -1;
         } else {
             if(propagateMincheck){
-                int ogMax = *min_element(cycset.domains[i][j].dom.begin(),cycset.domains[i][j].dom.end());
+                //int ogMax = *min_element(cycset.domains[i][j].dom.begin(),cycset.domains[i][j].dom.end());
+                int ogMax = cycset.bitdomains[i][j].dom.find_first();
                 if(invVal<ogMax)
                     return 1;
             } else {

@@ -38,7 +38,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     solver = new CaDiCaL::Solver();
     
     //solver->configure("plain");
-    if (!solver->configure("sat"))
+    if (!solver->configure("unsat"))
         EXIT_UNWANTED_STATE
 
     //solver->set("shuffle", 0);
@@ -94,6 +94,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     if(diagPart)
         fixDiag(diag);
 
+    /* printCycleSet(currentCycleSet);
+    printDomains(currentCycleSet); */
+
     if(minCheckOld)
         mincheck = new MinCheck_V1(diag,cycset_lits);
     else
@@ -110,10 +113,13 @@ void CadicalSolver::fixDiag(vector<int> diag)
             } else {
                 currentCycleSet.assignments[i][i][k]=True_t;
             }
-            if(k!=i)
-                currentCycleSet.domains[i][k].delete_value(diag[i]);
-            else
-                currentCycleSet.domains[i][k].dom=vector<int>{diag[i]};
+            if(k!=i){
+                currentCycleSet.bitdomains[i][k].delete_value(diag[i]);
+                //currentCycleSet.domains[i][k].delete_value(diag[i]);
+            } else {
+                currentCycleSet.bitdomains[i][k].set_value(diag[i]);
+                //currentCycleSet.domains[i][k].dom=vector<int>{diag[i]};
+            }
             fixedCycleSet[i][i][k]=true;
         }       
     currentCycleSet.matrix[i][i]=diag[i];

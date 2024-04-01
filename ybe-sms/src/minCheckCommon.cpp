@@ -19,15 +19,13 @@ bool MinCheckCommon::preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>>
 
 
 bool MinCheckCommon::permIsId(vector<int> &perm){
-    vector<int> id = vector<int>(problem_size,-1);
-    iota(id.begin(),id.end(),0);
-    if(perm==id)
-        return true;
-    id[problem_size-1]=-1;
-    if(perm==id)
-        return true;
-    else
-        return false;
+    for(int i=0; i<problem_size;i++){
+        if(i==problem_size-1)
+            return perm[i]==-1 || perm[i]==i;
+        else if(perm[i]!=i)
+            return false;
+        
+    }
 }
 
 int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
@@ -41,9 +39,6 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
         invperm[perm[r]]=r;
 
     vector<vector<int>> cyc = permToCyclePerm(perm);
-    vector<vector<int>> permMat;
-    copy(cycset.matrix.begin(), cycset.matrix.end(),back_inserter(permMat));
-    apply_perm(permMat, cyc, invperm);
 
     int fixes=0;
     for(int r = 0; r<problem_size;r++){
@@ -51,13 +46,16 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
             if(r<i || (r==i && c<j))
                 continue;
             int ogval = cycset.matrix[r][c];
-            int permval = permMat[r][c];
+            int permval = cycset.matrix[perm[r]][perm[c]]!=-1? invperm[cycset.matrix[perm[r]][perm[c]]]: -1 ;
             if(ogval==-1){
-                int minog = *min_element(cycset.domains[r][c].dom.begin(),cycset.domains[r][c].dom.end());
+                int minog = cycset.bitdomains[r][c].dom.find_first();
                 if(permval!=-1&&permval<minog){
                     addClauses(perm,r,c);
                     break;
-                } else {
+                } else if(permval==minog){
+                    continue;
+                }
+                else {
                     fixes = -1;
                     break;
                 }
@@ -73,7 +71,14 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
                         break;
                     }
                 } else {
-                    if(ogval!=problem_size-1){
+                    int highest_idx = cycset.bitdomains[perm[r]][perm[c]].dom.find_first();
+                    int highest = invperm[highest_idx];
+                    while (cycset.bitdomains[perm[r]][perm[c]].dom.find_next(highest_idx)<problem_size){
+                        highest_idx=cycset.bitdomains[perm[r]][perm[c]].dom.find_next(highest_idx);
+                        if(invperm[highest_idx]>highest)
+                            highest=invperm[highest_idx];
+                    }
+                    if(ogval<highest){
                         fixes = -1;
                         break;
                     }
@@ -141,8 +146,8 @@ void MinCheckCommon::addClauses(vector<int> &perm, int r, int c)
             if(diagPart && index!=cycset.matrix[r][r]){
                 toAdd.push_back(cycset_lits[perm[r]][perm[c]][perm[index]]);
                 toAdd.push_back(-cycset_lits[r][c][index]);
-                //printf("M_%d_%d_%d ",perm[r],perm[c],perm[index]); 
-                //printf("-M_%d_%d_%d \n",r,c,index); 
+                /* printf("M_%d_%d_%d ",perm[r],perm[c],perm[index]); 
+                printf("-M_%d_%d_%d \n",r,c,index);  */
                 throw toAdd;
             } else {
                 toAdd.push_back(cycset_lits[perm[r]][perm[c]][perm[problem_size-2]]);
@@ -153,7 +158,7 @@ void MinCheckCommon::addClauses(vector<int> &perm, int r, int c)
     } else {
         vector<int> toExclude;
         if(cycset.matrix[r][c]==-1){
-            for(auto i : cycset.domains[r][c].dom){
+            for(auto i : cycset.bitdomains[r][c].options()){
                 if(i>invperm[cycset.matrix[perm[r]][perm[c]]])
                     toExclude.push_back(i);
             }

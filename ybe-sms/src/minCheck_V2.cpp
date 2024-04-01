@@ -24,28 +24,37 @@ MinCheck_V2::MinCheck_V2(){
 MinCheck_V2::MinCheck_V2(vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits){
     this->cycset_lits=cycset_lits;
     this->diag=cyclePerm_t(diag);
-
+    
+    diagIsId=true;
     if(diagPart){
-        diagIsId=true;
         for(int i=0; i<problem_size; i++){
             if(this->diag.permOf(i)!=i)
                 diagIsId=false;
         }
-    } else
-        diagIsId=true;
+    }
 
     initialPart = partialPerm_t(diag);
 }
 
 
 void MinCheck_V2::MinCheck(cycle_set_t cycset){
+    /* printf("MINCHECK!!!!!!!\n");
+    printPartiallyDefinedCycleSet(cycset);
+    printDomains(cycset); */
+    this->depth=0;
     this->cycset=cycset;
     checkMinimality(initialPart, 0);
 }
 
 //Backtracking algorithm
 void MinCheck_V2::checkMinimality(partialPerm_t &perm, int r){
-
+    //printf("row %d\n",r);
+    //perm.print();
+    depth++;
+    if(!final && depth>maxDepth){
+        throw LimitReachedException();
+    }
+    
     vector<partialPerm_t> propagated_options = vector<partialPerm_t>();
     //queue<int> rows = queue<int>();
 
@@ -149,7 +158,8 @@ void MinCheck_V2::filterOptions(partialPerm_t &perm, vector<int> &options, int r
 
         //M[i,j] unknown
         if(ogVal==-1){
-            int minog = *min_element(cycset.domains[0][r].dom.begin(),cycset.domains[0][r].dom.end());
+            //int minog = *min_element(cycset.domains[0][r].dom.begin(),cycset.domains[0][r].dom.end());
+            int minog = cycset.bitdomains[0][r].dom.find_first();
             //p^-1 M[p(i),p(j)] known
             //If less than min og, breaking perm found, else skip.
             if(invVal!=-1){

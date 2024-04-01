@@ -18,7 +18,7 @@ bool CommonInterface::propagate()
 
   if ((rand() % checkFreq == 0) && checkSolutionInProp)
   {
-    res=checkMin();
+    res=checkMin(false);
   }
   else
     res=true;
@@ -27,12 +27,26 @@ bool CommonInterface::propagate()
   return res;
 }
 
-bool CommonInterface::checkMin()
+bool CommonInterface::checkMin(bool final)
 {
-
   auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
+  bool fullDefined = true;
+  for(auto i = problem_size-1; i>=0; i--){
+    for(auto j=problem_size-1; j>=0; j--){
+        if(cycset.matrix[i][j]==-1){
+          fullDefined = false;
+          break;
+        }
+    }
+    if(!fullDefined)
+      break;
+  }
+  if(fullDefined)
+    mincheck->final=true;
+  else
+    mincheck->final=final;
   
   try
   {
@@ -59,6 +73,10 @@ bool CommonInterface::checkMin()
     }
     res=false;
   } 
+  catch (LimitReachedException)
+  {
+    printf("Limit reached\n");
+  }
   stats.timeMinimalityCheck += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   return res;
 }
@@ -67,7 +85,7 @@ bool CommonInterface::check()
 {
   auto start = steady_clock::now();
   
-  bool res=checkMin();
+  bool res=checkMin(true);
 
   stats.timePropagator += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   stats.callsCheck+=1LL;

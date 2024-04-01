@@ -42,7 +42,7 @@ void printPartiallyDefinedCycleSet(const cycle_set_t &cycset)
 
 void printDomains(const cycle_set_t &cycset)
 {
-    for (auto row : cycset.domains)
+    for (auto row : cycset.bitdomains)
     {
       for (auto dom : row)
       {
@@ -51,6 +51,16 @@ void printDomains(const cycle_set_t &cycset)
       }
       printf("\n");
     }
+
+    /* for (auto row : cycset.domains)
+    {
+      for (auto dom : row)
+      {
+        dom.printDomain();
+        printf("\t");
+      }
+      printf("\n");
+    } */
 }
 
 void printAssignments(const cycle_set_t &cycset)
@@ -207,7 +217,11 @@ vector<vector<int>> permToCyclePerm(vector<int> &perm){
 }
 
 void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &part){
-  vector<domain_t> parts = vector<domain_t>(problem_size,domain_t(0));
+  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size));
+  
+  for(int pt = 0; pt<parts.size(); pt++)
+    parts[pt].dom.reset();
+
   for(auto cyc : perm){
     int len = cyc.size();
     if(len!=0){
@@ -215,11 +229,12 @@ void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &p
         parts[len-1].add_value(el);
     }
   }
+
   parts.erase(
     remove_if(
       parts.begin(),
       parts.end(), 
-      [](domain_t d){return d.is_empty();}),
+      [](bitdomain_t d){return d.is_empty();}),
       parts.end()
   );
 
@@ -227,30 +242,28 @@ void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &p
   
   for(int i=0; i<parts.size();i++){
     mins[i][1]=i;
-    mins[i][0]=*min_element(parts[i].dom.begin(),parts[i].dom.end());
+    //mins[i][0]=*min_element(parts[i].dom.begin(),parts[i].dom.end());
+    mins[i][0]=parts[i].dom.find_first();
   }
 
   sort(mins.begin(),mins.end(),[](vector<int>el1,vector<int>el2){return el1[0]<el2[0];});
 
   for(auto el : mins){
     bool first=true;
-    for(auto i : parts[el[1]].dom){
-      if(first)
-        {part.push_back(true);
-        first=false;}
-      else 
+    for (int i = parts[el[1]].dom.find_first(); i < problem_size && i!=-1; i=parts[el[1]].dom.find_next(i)){
+      if(first){
+        part.push_back(true);
+        first=false;
+      } else 
         part.push_back(false);
       elOrd.push_back(i);
     }
   }
 }
 
-void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j){
-  for(int r=0; r<problem_size; r++){
-    int swp = og_mat[r][i];
-    og_mat[r][i]=og_mat[r][j];
-    og_mat[r][j]=swp;
-  }
+/* void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j){
+  for(int r=0; r<problem_size; r++)
+    swap(og_mat[r][i],og_mat[r][j]);
 }
 void swap_matrix_rows(std::vector<vector<int>> &og_mat, int i, int j){
   og_mat[i].swap(og_mat[j]);
@@ -261,7 +274,7 @@ void rotate_matrix_rows(std::vector<vector<int>> &og_mat, vector<int> cycPerm){
   copy(og_mat[cycPerm[0]].begin(),og_mat[cycPerm[0]].end(),back_inserter(swap));
   int prev = 0;
   int max = cycPerm.size();
-  for(int i=1; i<max;i++){
+  for(int i=1; i<max; i++){
     og_mat[cycPerm[prev]]=move(og_mat[cycPerm[i]]);
     prev=i;
   }
@@ -294,10 +307,10 @@ void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm,
   for(int i=0; i<problem_size; i++){
     for(int j=0; j<problem_size; j++){
       if(og_mat[i][j]!=-1)
-        og_mat[i][j]=invperm[og_mat[i][j]];
+       og_mat[i][j]=invperm[og_mat[i][j]];
     }
   }
-}
+} */
 
 cyclePerm_t::cyclePerm_t(){ };
 

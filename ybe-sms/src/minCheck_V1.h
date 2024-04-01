@@ -14,10 +14,10 @@ public:
     MinCheck_V1(cycle_set_t cycset, vector<vector<vector<lit_t>>> cycset_lits);
     MinCheck_V1();
     MinCheck_V1(vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits);
-    void checkMinimality(vector<int> &perm, vector<vector<int>> &fixingPerms, int r, int c, int res, int d);
     void MinCheck(cycle_set_t cycset);
 
 private:
+    void checkMinimality(vector<int> &perm, vector<vector<int>> &fixingPerms, int r, int c, int res, int d);
     int getBreakingOrFixingSymms(vector<vector<int>> &fixingPerms, vector<int> &perm, int i, int j);
     int unknownIndexCase(vector<vector<int>> &fixingPerms, vector<int> &perm, int i, int j); 
     void possibleMatrixEntryPermutations(vector<int> &perm, vector<vector<int>> &pos, int i, int j);

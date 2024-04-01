@@ -29,7 +29,7 @@ protected:
 
   // functions which are the same for all solvers, which use the previous funcitons
 private:
-  bool checkMin(); // checks if adjacency matrix is minimal
+  bool checkMin(bool final); // checks if adjacency matrix is minimal
   //bool cutoffFunction();                        // If certain number of edge variables is assigned, a cube will be generated
 
   //bool checkFullyDefinedCycleSet(const cycle_set_t &cycset); // check the property of the fully defined graph
