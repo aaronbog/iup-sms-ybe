@@ -32,6 +32,7 @@ bool CommonInterface::checkMin(bool final)
   auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
+  
   bool fullDefined = true;
   for(auto i = problem_size-1; i>=0; i--){
     for(auto j=problem_size-1; j>=0; j--){
@@ -43,10 +44,13 @@ bool CommonInterface::checkMin(bool final)
     if(!fullDefined)
       break;
   }
+  
   if(fullDefined)
     mincheck->final=true;
   else
     mincheck->final=final;
+
+  bool failed=false;
   
   try
   {
@@ -55,15 +59,12 @@ bool CommonInterface::checkMin(bool final)
       //checkMinimality(cycset,cycset_lits);
     }
   }
-  /* catch (LimitReachedException e)
-  {
-    printf("Limit reached\n");
-  } */
   catch (clause_t c)
   {
     stats.nSymBreakClauses+=1LL;
     addClause(c,true);
     res=false;
+    failed=true;
   }
   catch (vector<clause_t> cs)
   {
@@ -72,11 +73,34 @@ bool CommonInterface::checkMin(bool final)
       addClause(c,true);
     }
     res=false;
+    failed=true;
   } 
   catch (LimitReachedException)
   {
-    printf("Limit reached\n");
+    bool failed = true;
   }
+
+  if(fullDefined && !failed && allModels){
+    nModels++;
+    fprintf(output,"Solution %d\n", nModels);
+    fprintCycleSet(output, cycset);
+    vector<lit_t> clause;
+    for (int i = 0; i < problem_size; i++)
+      for (int j = 0; j < problem_size; j++)
+      {
+        if(diagPart && i==j)
+              continue;
+        for (int k = 0; k < problem_size; k++)
+        {
+          if (cycset.assignments[i][j][k] == True_t){
+            clause.push_back(-cycset_lits[i][j][k]);
+          }
+        }
+      }
+    addClause(clause, false);
+    res=false;
+  }
+
   stats.timeMinimalityCheck += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
   return res;
 }
@@ -103,7 +127,6 @@ bool CommonInterface::check()
   if (allModels)
   {
     // exclude current graph
-    cycle_set_t &cs = cycset;
     vector<lit_t> clause;
     /* printf("------------------\n");
     printCycleSet(cycset); */
@@ -118,7 +141,7 @@ bool CommonInterface::check()
         {
           //if(!containsDec && is_decision(cycset_lits[i][j][k]))
             //containsDec=true;
-          if (cs.assignments[i][j][k] == True_t){
+          if (cycset.assignments[i][j][k] == True_t){
             //posLit=cycset_lits[i][j][k];
             //printf("%d = M_%d,%d,%d\n",posLit, i,j,k);
             clause.push_back(-cycset_lits[i][j][k]);

@@ -235,10 +235,8 @@ public:
         if (!clauses.empty())
             return false; // EXIT_UNWANTED_STATE only do check if there isn't another clause to add before
         // this->current_trail = &model;
-        if (checkSolutionInProp)
-        {
-            return check();
-        }
+        return check();
+        
         return true;
     }
 
