@@ -40,6 +40,7 @@ extern bool checkSolutionInProp;
 extern bool smallerEncoding;
 extern bool propagateMincheck;
 extern bool oldBreakingClauses;
+extern string solOutput;
 
 extern string proofFile;
 

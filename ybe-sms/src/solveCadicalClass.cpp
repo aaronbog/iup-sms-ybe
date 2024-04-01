@@ -23,6 +23,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     current_trail.push_back(std::vector<int>());
 
     string outputFilePath;
+    outputFilePath.append(solOutput);
     outputFilePath.append("sols_");
     outputFilePath.append(to_string(problem_size));
     outputFilePath.append("_");

@@ -24,6 +24,7 @@ int maxDepth = INT_MAX;
 bool doFinalCheck=false;
 bool smallerEncoding=false;
 bool minCheckOld = false;
+string solOutput = "";
 vector<int> diagonal=vector<int>();
 
 int main(int argc, char const **argv)
@@ -127,6 +128,13 @@ int main(int argc, char const **argv)
                     printf("ERROR: invalid argument, maxDepth needs to be a positive number.");
                     EXIT_UNWANTED_STATE;
                 }
+            }
+
+        if(strcmp("--out", argv[i])==0)
+            {
+                i++;
+                stringstream ss;
+                solOutput=argv[i];
             }
 
 
