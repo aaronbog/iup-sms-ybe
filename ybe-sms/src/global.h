@@ -11,6 +11,7 @@ extern int checkFreq;
 extern int maxDepth;
 extern bool doFinalCheck;
 extern bool minCheckOld;
+extern bool useBit;
 
 
 //extern vector<vector<vector<lit_t>>> cycset_lits;

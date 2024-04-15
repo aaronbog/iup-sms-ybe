@@ -163,41 +163,6 @@ void makeDiagonals(vector<vector<int>>& parts, vector<vector<int>>& permutations
   }
 }
 
-/* perm_t newPerm(){
-  perm_t newPerm;
-  newPerm.perm=vector<int>(problem_size,-1);
-  newPerm.inverse=vector<int>(problem_size,-1);
-  return newPerm;
-}
-
-void perm_t::extendPerm(int i, int j){
-  perm[i]=j;
-  inverse[j]=i;
-}
-
-void perm_t::extendInvPerm(int i, int j){
-  inverse[i]=j;
-  perm[j]=i;
-} */
-
-/* void perm_t::permToCyclePerm(){
-  vector<vector<int>> cycles;
-  vector<int> all = vector<int>(problem_size,-1);
-  iota(all.begin(),all.end(),0);
-  
-  while(all.size()!=0){
-    int i = *min_element(all.begin(),all.end());
-    vector<int> cycle=vector<int>();
-    while (find(cycle.begin(),cycle.end(),i)==cycle.end()){
-      cycle.push_back(i);
-      all.erase(find(all.begin(),all.end(),i));
-      i=perm[i];
-    }
-    cycles.push_back(cycle);
-  }
-  cycPerm=cycles;
-} */
-
 vector<vector<int>> permToCyclePerm(vector<int> &perm){
   vector<vector<int>> cycles;
   vector<int> all = vector<int>(problem_size,-1);
@@ -260,57 +225,6 @@ void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &p
     }
   }
 }
-
-/* void swap_matrix_cols(std::vector<vector<int>> &og_mat, int i, int j){
-  for(int r=0; r<problem_size; r++)
-    swap(og_mat[r][i],og_mat[r][j]);
-}
-void swap_matrix_rows(std::vector<vector<int>> &og_mat, int i, int j){
-  og_mat[i].swap(og_mat[j]);
-}
-
-void rotate_matrix_rows(std::vector<vector<int>> &og_mat, vector<int> cycPerm){
-  vector<int> swap = vector<int>();
-  copy(og_mat[cycPerm[0]].begin(),og_mat[cycPerm[0]].end(),back_inserter(swap));
-  int prev = 0;
-  int max = cycPerm.size();
-  for(int i=1; i<max; i++){
-    og_mat[cycPerm[prev]]=move(og_mat[cycPerm[i]]);
-    prev=i;
-  }
-  og_mat[cycPerm[prev]]=move(swap);
-}
-
-void rotate_matrix_cols(std::vector<vector<int>> &og_mat, std::vector<int> cycPerm){
-  for(int r=0; r<problem_size; r++){
-      int prev = 0;
-      int swp = og_mat[r][cycPerm[0]];
-      int max = cycPerm.size();
-      for(int i=1; i<max;i++){
-        og_mat[r][cycPerm[prev]]=og_mat[r][cycPerm[i]];
-        prev=i;
-      }
-      og_mat[r][cycPerm[prev]]=swp;
-  }
-}
-
-void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm, vector<int> invperm){
-  for(auto cyc : perm){
-    if(cyc.size()==2){
-      swap_matrix_cols(og_mat,cyc[0],cyc[1]);
-      swap_matrix_rows(og_mat,cyc[0],cyc[1]);
-    } else if (cyc.size()>2){
-      rotate_matrix_cols(og_mat,cyc);
-      rotate_matrix_rows(og_mat,cyc);
-    }
-  }
-  for(int i=0; i<problem_size; i++){
-    for(int j=0; j<problem_size; j++){
-      if(og_mat[i][j]!=-1)
-       og_mat[i][j]=invperm[og_mat[i][j]];
-    }
-  }
-} */
 
 cyclePerm_t::cyclePerm_t(){ };
 
@@ -389,15 +303,20 @@ int cyclePerm_t::invPermOf(int el){
     return element[el-1];
 }
 
-partialPerm_t::partialPerm_t(){
+pperm_plain::pperm_plain(){
 }
 
-partialPerm_t::partialPerm_t(vector<int> perm){
+pperm_plain::~pperm_plain(){
+  /* delete[]&element;
+  delete[]&part; */
+}
+
+pperm_plain::pperm_plain(vector<int> perm){
   auto cyc = permToCyclePerm(perm);
   cycleToParts(cyc, element, part);
 }
 
-void partialPerm_t::print(){
+void pperm_plain::print(){
   for(auto i : element){
     printf("%d , ", i);
   }
@@ -408,7 +327,7 @@ void partialPerm_t::print(){
   printf("\n");
 }
 
-bool partialPerm_t::fixed(int el){
+bool pperm_plain::fixed(int el){
   if(el==problem_size-1){
     return part[el];
   } else {
@@ -416,7 +335,7 @@ bool partialPerm_t::fixed(int el){
   }
 }
 
-bool partialPerm_t::fullDefined(){
+bool pperm_plain::fullDefined(){
   bool full = true;
   for(int i=0; i<problem_size; i++){
     if(!fixed(i))
@@ -425,7 +344,7 @@ bool partialPerm_t::fullDefined(){
   return true;
 }
 
-bool partialPerm_t::fix(int el, int img){
+bool pperm_plain::fix(int el, int img){
   if(fixed(el) || (invPermOf(img)!=-1 && fixed(invPermOf(img)))){
     return element[el]==img;
   }
@@ -440,14 +359,14 @@ bool partialPerm_t::fix(int el, int img){
   return true;
 }
 
-int partialPerm_t::permOf(int el){
+int pperm_plain::permOf(int el){
   if(fixed(el)){
     return element[el];
   } else
     return -1;
 }
 
-int partialPerm_t::invPermOf(int el){
+int pperm_plain::invPermOf(int el){
   int invEl = find(element.begin(),element.end(),el)-element.begin();
   if(fixed(invEl)){
     return invEl;
@@ -455,14 +374,15 @@ int partialPerm_t::invPermOf(int el){
     return -1;
 }
 
-partialPerm_t partialPerm_t::copyPerm(){
-  partialPerm_t copyPerm;
-  copy(element.begin(),element.end(), back_inserter(copyPerm.element));
-  copy(part.begin(), part.end(), back_inserter(copyPerm.part));
-  return copyPerm;
+vector<int> pperm_plain::getPerm(){
+  return element;
 }
 
-vector<int> partialPerm_t::options(int el){
+shared_ptr<pperm_common> pperm_plain::copyPerm(){
+  return make_shared<pperm_plain>(pperm_plain(*this));
+}
+
+vector<int> pperm_plain::options(int el){
   vector<int> options;
   int p=0;
   for(int i=0; i<=el; i++){
@@ -482,4 +402,147 @@ vector<int> partialPerm_t::options(int el){
     }
   }
   return options;
+}
+
+vector<int> pperm_plain::invOptions(int el){
+  vector<int> options;
+  int p=0;
+  int ind=0;
+  for(int i=0; i<problem_size; i++){
+    if(part[i]==true)
+      p=i;
+    if(element[i]==el){
+      ind=i;
+      break;
+    }
+  }
+
+  if(p==ind && (p==problem_size-1 || part[p+1]==true)){
+    options.push_back(ind);
+  } else {
+    for(int i=ind; i<problem_size; i++){
+      if(i!=p && part[i]==true)
+        break;
+      options.push_back(i);
+    }
+    for(int i=p; i<ind; i++){
+      options.push_back(i);
+    }
+  }
+  return options;
+}
+
+pperm_bit::pperm_bit(){
+}
+
+pperm_bit::~pperm_bit(){}
+
+pperm_bit::pperm_bit(vector<int> perm){
+  auto cyc = permToCyclePerm(perm);
+  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size));
+  
+  for(int pt = 0; pt<problem_size; pt++)
+    parts[pt].dom.reset();
+
+  for(auto c : cyc){
+    int len = c.size();
+    if(len!=0){
+      for(int el : c)
+        parts[len-1].add_value(el);
+    }
+  }
+
+  parts.erase(
+    remove_if(
+      parts.begin(),
+      parts.end(), 
+      [](bitdomain_t d){return d.is_empty();}),
+      parts.end()
+  );
+
+  elements = vector<bitdomain_t>(problem_size,bitdomain_t());
+  
+  for(int i=0; i<parts.size();i++){
+    for(int j : parts[i].options()){
+      elements[j].dom=boost::dynamic_bitset<>(parts[i].dom);
+    }
+  }
+}
+
+void pperm_bit::print(){
+  for(int i=0; i<problem_size; i++){
+    printf("%d:",i);
+    elements[i].printDomain();
+    printf(", ");
+  }
+  printf("\n");
+}
+
+bool pperm_bit::fixed(int el){
+  return elements[el].dom.count()==1;
+}
+
+bool pperm_bit::fullDefined(){
+  for(int i=0; i<problem_size; i++){
+    if(!fixed(i))
+      return false;
+  }
+  return true;
+}
+
+bool pperm_bit::fix(int el, int img){
+  if(!elements[el].dom[img])
+    return false;
+
+  
+  for(int i =0; i<problem_size; i++){
+    if(i==el)
+      elements[i].set_value(img);
+    else{
+      elements[i].delete_value(img);
+      if(elements[i].is_empty())
+        return false;
+    }
+  }
+  return true;
+}
+
+int pperm_bit::permOf(int el){
+  if(fixed(el)){
+    return elements[el].dom.find_first();
+  } else
+    return -1;
+}
+
+int pperm_bit::invPermOf(int el){
+  for(int i=0; i<problem_size; i++){
+    if(permOf(i)==el)
+      return i;
+  }
+  return -1;
+}
+
+shared_ptr<pperm_common> pperm_bit::copyPerm(){
+  return make_shared<pperm_bit>(pperm_bit(*this));
+}
+
+vector<int> pperm_bit::options(int el){
+  return elements[el].options();
+}
+
+vector<int> pperm_bit::invOptions(int el){
+  vector<int> options = vector<int>();
+  for(int i = 0; i<elements.size(); i++){
+    if(elements[i].dom[el])
+      options.push_back(i);
+  }
+  return options;
+}
+
+vector<int> pperm_bit::getPerm(){
+  vector<int> perm = vector<int>(problem_size,-1);
+  for(int i=0; i<problem_size; i++){
+    perm[i]=elements[i].dom.find_first();
+  }
+  return perm;
 }

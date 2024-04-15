@@ -24,6 +24,7 @@ int maxDepth = INT_MAX;
 bool doFinalCheck=false;
 bool smallerEncoding=false;
 bool minCheckOld = false;
+bool useBit = false;
 string solOutput = "";
 vector<int> diagonal=vector<int>();
 
@@ -95,6 +96,13 @@ int main(int argc, char const **argv)
         if (strcmp("--oldMinCheck", argv[i]) == 0)
             {
                 minCheckOld = true;
+                continue;
+            }
+
+        if (strcmp("--useBit", argv[i]) == 0)
+            {
+                useBit = true;
+                printf("USING BIT");
                 continue;
             }
 

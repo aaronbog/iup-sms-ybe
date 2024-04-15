@@ -77,6 +77,9 @@ typedef enum {
 typedef struct bitdomain_t{
     boost::dynamic_bitset<> dom;
 
+    bitdomain_t(){}
+    ~bitdomain_t(){};
+
     bitdomain_t(int problem_size){
         dom.resize(problem_size);
         dom.set();
@@ -158,7 +161,7 @@ void apply_perm(std::vector<vector<int>> &og_mat, std::vector<vector<int>> perm,
     void permToCyclePerm();
 } perm_t; */
 
-typedef struct partialPerm_t{
+/* typedef struct partialPerm_t{
     std::vector<int> element;
     std::vector<bool> part;
 
@@ -172,7 +175,78 @@ typedef struct partialPerm_t{
     bool fix(int p, int pp);
     void print();
     bool fullDefined();
-} partialPerm_t;
+} partialPerm_t; */
+
+class pperm_common
+{
+public:
+    virtual ~pperm_common(){}
+    virtual shared_ptr<pperm_common> copyPerm() { EXIT_UNWANTED_STATE };
+    virtual int permOf(int p) { EXIT_UNWANTED_STATE };
+    virtual vector<int> options(int p) { EXIT_UNWANTED_STATE };
+    virtual vector<int> invOptions(int p) { EXIT_UNWANTED_STATE };
+    virtual int invPermOf(int p) { EXIT_UNWANTED_STATE };
+    virtual bool fixed(int p) { EXIT_UNWANTED_STATE };
+    virtual bool fix(int p, int pp) { EXIT_UNWANTED_STATE };
+    virtual void print() { EXIT_UNWANTED_STATE };
+    virtual bool fullDefined() { EXIT_UNWANTED_STATE };
+    virtual vector<int> getPerm() { EXIT_UNWANTED_STATE }; 
+};
+
+class pperm_plain : public pperm_common
+{
+public:
+    shared_ptr<pperm_common> copyPerm();
+    int permOf(int p);
+    vector<int> options(int p);
+    vector<int> invOptions(int p);
+    int invPermOf(int p);
+    bool fixed(int p);
+    bool fix(int p, int pp);
+    void print();
+    bool fullDefined();
+    std::vector<int> element;
+    std::vector<bool> part;
+    vector<int> getPerm();
+    pperm_plain(std::vector<int> perm);
+    pperm_plain();
+    ~pperm_plain();
+};
+
+class pperm_bit : public pperm_common
+{
+public:
+    shared_ptr<pperm_common> copyPerm();
+    int permOf(int p);
+    vector<int> options(int p);
+    vector<int> invOptions(int p);
+    int invPermOf(int p);
+    bool fixed(int p);
+    bool fix(int p, int pp);
+    void print();
+    bool fullDefined();
+    vector<int> getPerm();
+    std::vector<bitdomain_t> elements;
+    pperm_bit(vector<int> perm);
+    pperm_bit();
+    ~pperm_bit();
+};
+
+/* typedef struct bitpartialPerm_t{
+    std::vector<bitdomain_t> elements;
+
+    bitpartialPerm_t(std::vector<int> perm);
+    bitpartialPerm_t();
+    bitpartialPerm_t copyPerm();
+    int permOf(int p);
+    vector<int> options(int p);
+    vector<int> getPerm();
+    int invPermOf(int p);
+    bool fixed(int p);
+    bool fix(int p, int pp);
+    void print();
+    bool fullDefined();
+} bitpartialPerm_t; */
 
 
 typedef struct cyclePerm_t{

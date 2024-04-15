@@ -38,7 +38,10 @@ MinCheck_V1::MinCheck_V1(vector<int> diag, vector<vector<vector<lit_t>>> cycset_
     } else
         diagIsId=true;
 
-    initialPart = partialPerm_t(diag);
+    if(useBit)
+        initialPart = shared_ptr<pperm_common>(new pperm_bit(diag));
+    else 
+        initialPart = shared_ptr<pperm_common>(new pperm_plain(diag));
 }
 
 void MinCheck_V1::MinCheck(cycle_set_t cycset){

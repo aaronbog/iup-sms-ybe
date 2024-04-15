@@ -13,14 +13,14 @@ class MinCheckCommon
 public:
     bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);
     virtual void MinCheck(cycle_set_t cycset) { EXIT_UNWANTED_STATE };
-    virtual void checkMinimality(partialPerm_t &perm, int r) { EXIT_UNWANTED_STATE };
+    virtual void checkMinimality(shared_ptr<pperm_common> perm, int r) { EXIT_UNWANTED_STATE };
     bool final;
 
 protected:
     cycle_set_t cycset;
     vector<vector<vector<lit_t>>> cycset_lits;
     cyclePerm_t diag;
-    partialPerm_t initialPart;
+    shared_ptr<pperm_common> initialPart;
     bool diagIsId;
     int depth;
     bool permIsId(vector<int> &perm);

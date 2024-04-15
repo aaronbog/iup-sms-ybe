@@ -7,11 +7,14 @@
 #include<iterator>
 
 bool MinCheckCommon::preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits){
-    for(int i = 0; i<=problem_size-1; i++){
-        for(int j = 0; j<=problem_size-1; j++){
+    //bool isID = true;
+    for(int i = 0; i<problem_size; i++){
+        for(int j = 0; j<problem_size; j++){
             if(count(cycset.matrix[j].begin(), cycset.matrix[j].end(), i)>1){
                 return true;
             }
+            /* if(cycset.matrix[i][j]==-1 ||  cycset.matrix[i][j]!=j)
+                isID=false; */
         }
     }
     return false;
@@ -93,6 +96,8 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
 
 void MinCheckCommon::addClauses(vector<int> &perm, int r, int c)
 {
+
+    //printf("ADDING BREAKING CLAUSES\n");
 
     vector<int> toAdd;
     vector<int> invperm=vector<int>(problem_size,-1);

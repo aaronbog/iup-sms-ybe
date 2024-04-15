@@ -14,15 +14,17 @@ public:
     MinCheck_V2(cycle_set_t cycset, vector<vector<vector<lit_t>>> cycset_lits);
     MinCheck_V2();
     MinCheck_V2(vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits);
-    void checkMinimality(partialPerm_t &perm, int r);
+    void checkMinimality(shared_ptr<pperm_common> perm, int r);
     void MinCheck(cycle_set_t cycset);
 
 
 private:
-    void filterOptions(partialPerm_t &perm, vector<int> &options, int r, vector<partialPerm_t> &options_prop);
-    bool propagateDecision(partialPerm_t &perm, int r);
-    bool fixAndPropagate(partialPerm_t &perm, int i, int j);
-    partialPerm_t inverseUnkown(partialPerm_t &perm, int i, int j);
+    void extendPerm(shared_ptr<pperm_common> perm);
+    void filterOptions(shared_ptr<pperm_common> perm, vector<int> &options, int r, vector<shared_ptr<pperm_common>> &options_prop);
+    void filterOptions2(shared_ptr<pperm_common> perm, vector<int> &options, int r, vector<shared_ptr<pperm_common>> &options_prop);
+    bool propagateDecision(shared_ptr<pperm_common> perm, int r);
+    bool fixAndPropagate(shared_ptr<pperm_common> perm, int i, int j);
+    shared_ptr<pperm_common> inverseUnkown(shared_ptr<pperm_common> perm, int i, int j);
 };
 
 bool preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>> &cycset_lits);
