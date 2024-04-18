@@ -94,6 +94,71 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
     return -1;
 }
 
+int MinCheckCommon::permFullyDefinedCheck2(vector<int> &perm, int i, int j){
+    bool permId=true;
+
+    if(permIsId(perm))
+        return -1;
+
+    vector<int> invperm = vector<int>(problem_size,-1);
+    for(int r=0; r<problem_size; r++)
+        invperm[perm[r]]=r;
+
+    int fixes=0;
+    for(int r = 0; r<problem_size;r++){
+        for(int c=0; c<problem_size; c++){
+            if(r<i || (r==i && c<j))
+                continue;
+            
+            int minog = cycset.bitdomains[r][c].dom.find_first();
+            bool minOgFixed=cycset.matrix[r][c]!=-1;
+            vector<int> permVal = cycset.bitdomains[perm[r]][perm[c]].options();
+            int pv;
+            if(permVal.size()==1)
+                pv=permVal[0];
+            else
+                pv=-1;
+            int inv;
+            if(permVal.size()==1)
+                inv=invperm[pv];
+            else
+                inv=-1;
+
+            switch(permVal.size())
+            {
+                case 1:
+                    if(inv<minog){
+                        addClauses(perm,r,c);
+                        break;
+                    } else if (inv==minog){
+                        break;
+                    } else {
+                        fixes=-1;
+                        break;
+                    }
+                default:
+                    vector<int> invpermvals=vector<int>();
+                    for(auto p : permVal){
+                        invpermvals.push_back(invperm[p]);
+                    }
+                    if(*max_element(invpermvals.begin(),invpermvals.end())<=minog){
+                        addClauses(perm,r,c);
+                        break;
+                    } else {
+                        fixes=-1;
+                        break;
+                    }
+            }
+            if(fixes!=0){
+                break;
+            }
+        }
+        if(fixes!=0)
+            break;
+    }
+    return -1;
+}
+
 void MinCheckCommon::addClauses(vector<int> &perm, int r, int c)
 {
 

@@ -25,6 +25,7 @@ protected:
     int depth;
     bool permIsId(vector<int> &perm);
     int permFullyDefinedCheck(vector<int> &perm, int i, int j);
+    int permFullyDefinedCheck2(vector<int> &perm, int i, int j);
     void addClauses(vector<int> &perm, int r, int c);
     
 };
