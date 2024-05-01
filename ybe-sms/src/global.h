@@ -12,12 +12,9 @@ extern int maxDepth;
 extern bool doFinalCheck;
 extern bool minCheckOld;
 extern bool useBit;
+extern bool rev;
+extern int logging;
 
-
-//extern vector<vector<vector<lit_t>>> cycset_lits;
-//extern vector<vector<lit_t>> ybe_left_lits;
-//extern vector<vector<lit_t>> ybe_right_lits;
-//extern vector<vector<lit_t>> ybe_lits;
 #define COUNT_ASSIGNED 0
 #define ESTIMATE_SPACE 1
 

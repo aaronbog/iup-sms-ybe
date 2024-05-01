@@ -25,6 +25,10 @@ bool doFinalCheck=false;
 bool smallerEncoding=false;
 bool minCheckOld = false;
 bool useBit = false;
+bool useRange = false;
+bool rev = false;
+int logging = 0;
+
 string solOutput = "";
 vector<int> diagonal=vector<int>();
 
@@ -138,11 +142,29 @@ int main(int argc, char const **argv)
                 }
             }
 
+        if (strcmp("--rev", argv[i]) == 0)
+            {
+                rev = true;
+                continue;
+            }
+
         if(strcmp("--out", argv[i])==0)
             {
                 i++;
                 stringstream ss;
                 solOutput=argv[i];
+            }
+
+        if(strcmp("--logging", argv[i])==0)
+            {
+                i++;
+                if(atoi(argv[i])>0){
+                    logging = atoi(argv[i]);
+                    continue;
+                } else {
+                    printf("ERROR: invalid argument, maxDepth needs to be a positive number.");
+                    EXIT_UNWANTED_STATE;
+                }
             }
 
 

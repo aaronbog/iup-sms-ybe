@@ -45,46 +45,39 @@ protected: // virtual classes from common interface
         else
         {
             cycle_set_t cycset(problem_size,currentCycleSet.cycset_lits);
-            //cycset.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
-            //cycset.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
             for (int i = 0; i < problem_size; i++)
                 for (int j = 0; j < problem_size; j++)
                     for (int k = 0; k < problem_size; k++)
                     {
                         if(cycset_lits[i][j][k]!=0){
-                            if (solver->val(cycset_lits[i][j][k])>0)
+                            int v=solver->val(cycset_lits[i][j][k]);
+                            if (v>0)
                             {
                                 cycset.matrix[i][j]=k;
                                 cycset.assignments[i][j][k]=True_t;
                                 //cycset.domains[i][j].dom=vector<int>{k};
-                                cycset.bitdomains[i][j].set_value(k);
+                                cycset.bitdomains[i][j].reset();
+                                cycset.bitdomains[i][j].set(k);
                                 for(int l=0; l<problem_size; l++){
-                                    if(j==l)
-                                        continue;
-                                    else {
-                                        //cycset.domains[i][l].delete_value(k);
-                                        cycset.bitdomains[i][l].delete_value(k);
-                                    }       
+                                    if(j!=l)
+                                        cycset.bitdomains[i][l].reset(k);   
                                 }
                             } 
-                            if (solver->val(cycset_lits[i][j][k])<0)
+                            if (v<0)
                             {
                                 cycset.assignments[i][j][k]=False_t;
                                 //cycset.domains[i][j].delete_value(k);
-                                cycset.bitdomains[i][j].delete_value(k);
+                                cycset.bitdomains[i][j].reset(k);
                             }
                         } else if (diagPart && i==j){
                             cycset.matrix[i][j]=currentCycleSet.matrix[i][j];
                             cycset.assignments[i][j][k]=True_t;
                             //cycset.domains[i][j].dom=vector<int>{k};
-                            cycset.bitdomains[i][j].set_value(k);
+                            cycset.bitdomains[i][j].reset();
+                                cycset.bitdomains[i][j].set(k);
                             for(int l=0; l<problem_size; l++){
-                                if(j==l)
-                                    continue;
-                                else {
-                                    //cycset.domains[i][l].delete_value(k);
-                                    cycset.bitdomains[i][l].delete_value(k);
-                                }
+                                if(j!=l)
+                                    cycset.bitdomains[i][l].reset(k);
                             }
                         }
                     } 
@@ -133,14 +126,15 @@ public:
         {
             currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = True_t;
             currentCycleSet.matrix[entry[0]][entry[1]] = entry[2];
-            currentCycleSet.bitdomains[entry[0]][entry[1]].set_value(entry[2]);
+            currentCycleSet.bitdomains[entry[0]][entry[1]].reset();
+            currentCycleSet.bitdomains[entry[0]][entry[1]].set(entry[2]);
             //currentCycleSet.domains[entry[0]][entry[1]].dom=vector<int>{entry[2]};
             for(int l=0; l<problem_size; l++){
                 if(entry[1]==l)
                     continue;
                 else {
                     //currentCycleSet.domains[entry[0]][l].delete_value(entry[2]);
-                    currentCycleSet.bitdomains[entry[0]][l].delete_value(entry[2]);
+                    currentCycleSet.bitdomains[entry[0]][l].reset(entry[2]);
                 }
             }
             
@@ -149,7 +143,7 @@ public:
         {
             currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = False_t;
             //currentCycleSet.domains[entry[0]][entry[1]].delete_value(entry[2]);
-            currentCycleSet.bitdomains[entry[0]][entry[1]].delete_value(entry[2]);
+            currentCycleSet.bitdomains[entry[0]][entry[1]].reset(entry[2]);
         }
         //printDomains(currentCycleSet);
         if (is_fixed)
@@ -173,59 +167,35 @@ public:
             for (int l : last)
             {
                 auto entry = lit2entry[l];
-                //printf("Entry = %d %d = %d\n",entry[0],entry[1],entry[2]);
                 if (fixedCycleSet[entry[0]][entry[1]][entry[2]])
                     continue;
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==True_t){
-                    //printf("Reset %d %d = %d was 1\n",entry[0],entry[1],entry[2]);
                     currentCycleSet.matrix[entry[0]][entry[1]]=-1;
-                    //currentCycleSet.domains[entry[0]][entry[1]]=domain_t(problem_size);
-                    currentCycleSet.bitdomains[entry[0]][entry[1]].dom.set();
+                    currentCycleSet.bitdomains[entry[0]][entry[1]].set();
                     for(int j=0;j<problem_size;j++){
                         if(j!=entry[1]){
                             if(currentCycleSet.matrix[entry[0]][j]!=-1){
-                                //currentCycleSet.domains[entry[0]][entry[1]].delete_value(currentCycleSet.matrix[entry[0]][j]);
-                                currentCycleSet.bitdomains[entry[0]][entry[1]].delete_value(currentCycleSet.matrix[entry[0]][j]);
+                                currentCycleSet.bitdomains[entry[0]][entry[1]].reset(currentCycleSet.matrix[entry[0]][j]);
                             } else if (currentCycleSet.assignments[entry[0]][j][entry[2]]!=False_t){
-                                //currentCycleSet.domains[entry[0]][j].add_value(entry[2]);
-                                currentCycleSet.bitdomains[entry[0]][j].add_value(entry[2]);
+                                currentCycleSet.bitdomains[entry[0]][j].set(entry[2]);
                             }
                         }
 
                         if(currentCycleSet.assignments[entry[0]][entry[1]][j]==False_t){
-                            //currentCycleSet.domains[entry[0]][entry[1]].delete_value(j);
-                            currentCycleSet.bitdomains[entry[0]][entry[1]].delete_value(j);
+                            currentCycleSet.bitdomains[entry[0]][entry[1]].reset(j);
                         }
                     }
-                    /* printDomains(currentCycleSet);
-                    printf("----\n"); */
                 }
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==False_t){
-                    //printf("Reset %d %d = %d was 0\n",entry[0],entry[1],entry[2]);
-                    //currentCycleSet.domains[entry[0]][entry[1]].add_value(entry[2]);
-                    currentCycleSet.bitdomains[entry[0]][entry[1]].add_value(entry[2]);
-                    /* printDomains(currentCycleSet);
-                    printf("----\n"); */
+                    currentCycleSet.bitdomains[entry[0]][entry[1]].set(entry[2]);
                 }
 
                 currentCycleSet.assignments[entry[0]][entry[1]][entry[2]] = Unknown_t;
             }
             current_trail.pop_back();
         }
-        //printDomains(currentCycleSet);
-        /* for(int i=0;i<problem_size;i++){
-            for(int j=0; j<problem_size;j++){
-                if(i==j)
-                    continue;
-                for(int k=0;k<problem_size;k++){
-                    if(k!=currentCycleSet.matrix[i][i])
-                        printf("%d, ", i,j,k,currentCycleSet.assignments[i][j][k]);
-                }
-            }
-        } */
-        //printf("------------------------------------------\n");
     }
 
     // currently not checked in propagator but with the normal incremental interface to allow adding other literals or even new once.
@@ -282,30 +252,12 @@ public:
         for(int i=0; i<problem_size; i++){
             for(int j=0; j<problem_size; j++){
                 if(i!=j && currentCycleSet.matrix[i][j]==-1){
-                    //int min = *min_element(currentCycleSet.domains[i][j].dom.begin(),currentCycleSet.domains[i][j].dom.end());
-                    int min = currentCycleSet.bitdomains[i][j].dom.find_first();
-                    /* int max = problem_size;
-                    for (boost::dynamic_bitset<>::size_type i = problem_size-1; i >= 0; --i)
-                    {
-                        if(currentCycleSet.bitdomains[i][j].dom[i])
-                            return cycset_lits[i][j][max];
-                    } */
+                    int min = currentCycleSet.bitdomains[i][j].firstel;
                     return cycset_lits[i][j][min];
                 }
             }
         }
         return 0;
-        /* vector<int> dom_sizes;
-        for(int i=0; i<problem_size; i++){
-            for(int j=0; j<problem_size; j++){
-                dom_sizes.push_back(currentCycleSet.domains[i][j].dom.size());
-            }
-        }
-        int max_index = distance(dom_sizes.begin(),max_element(dom_sizes.begin(), dom_sizes.end()));
-        int row = max_index/problem_size;
-        int col = max_index%problem_size;
-        int max = *max_element(currentCycleSet.domains[row][col].dom.begin(),currentCycleSet.domains[row][col].dom.end());
-        return cycset_lits[row][col][max]; */
     }
 
     int cb_propagate()

@@ -1,4 +1,4 @@
-add_executable(ybe_sms "main.cpp" "clause.cpp"  "useful.cpp" "solveCadicalClass.cpp" "solveGeneral.cpp" "minCheckCommon.cpp" "minCheck_V1.cpp" "minCheck_V2.cpp") 
+add_executable(ybe_sms "main.cpp" "clause.cpp"  "domains.cpp" "useful.cpp" "solveCadicalClass.cpp" "solveGeneral.cpp" "minCheckCommon.cpp" "minCheck_V2.cpp" "minCheck_V3.cpp") 
 target_link_libraries(ybe_sms PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../cadical-user-propagation/build/libcadical.a")
 
 include_directories(${Boost_INCLUDE_DIRS}) 
@@ -12,4 +12,4 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 target_compile_options(ybe_sms PRIVATE "-Wall" "-Wextra" "-pedantic" "-O3")
 
 
-add_executable(diag_maker "main_diagMaker.cpp" "useful.cpp")
+add_executable(diag_maker "main_diagMaker.cpp" "useful.cpp" "domains.cpp")

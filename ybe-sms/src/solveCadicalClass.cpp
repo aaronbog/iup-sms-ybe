@@ -2,8 +2,8 @@
 #include "global.h"
 #include "solveCadicalClass.hpp"
 #include "cadical.hpp"
-#include "minCheck_V1.h"
 #include "minCheck_V2.h"
+#include "minCheck_V3.h"
 
 // add formula and register propagator
 CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
@@ -13,11 +13,6 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     this->stats=stats;
     this->diag=diag;
     currentCycleSet = cycle_set_t(problem_size,lits);
-    //currentCycleSet.cycset_lits=lits;
-    //currentCycleSet.ordered_lits=ord_lits;
-    //currentCycleSet.assignments=vector<vector<vector<truth_vals>>>(problem_size, vector<vector<truth_vals>>(problem_size, vector<truth_vals>(problem_size, Unknown_t)));
-    //currentCycleSet.matrix=vector<vector<int>>(problem_size, vector<int>(problem_size, -1));
-    //currentCycleSet.domains=vector<vector<domain_t>>(problem_size,vector<domain_t>(problem_size,domain_t(problem_size)));
     fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
     // The root-level of the trail is always there
     current_trail.push_back(std::vector<int>());
@@ -45,7 +40,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     //solver->set("shuffle", 0);
     //solver->set("shufflequeue", 0);
 
-    // solver->set("lucky", 0);
+    solver->set("lucky", 0);
+    solver->set("walk", 0);
+    solver->set("elim", 0);
     // solver->set("log", 1);
     // solver->set("debug", 1);
 
@@ -99,7 +96,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     printDomains(currentCycleSet); */
 
     if(minCheckOld)
-        mincheck = new MinCheck_V1(diag,cycset_lits);
+        mincheck = new MinCheck_V3(diag,cycset_lits);
     else
         mincheck = new MinCheck_V2(diag,cycset_lits);
 
@@ -115,11 +112,10 @@ void CadicalSolver::fixDiag(vector<int> diag)
                 currentCycleSet.assignments[i][i][k]=True_t;
             }
             if(k!=i){
-                currentCycleSet.bitdomains[i][k].delete_value(diag[i]);
-                //currentCycleSet.domains[i][k].delete_value(diag[i]);
+                currentCycleSet.bitdomains[i][k].reset(diag[i]);
             } else {
-                currentCycleSet.bitdomains[i][k].set_value(diag[i]);
-                //currentCycleSet.domains[i][k].dom=vector<int>{diag[i]};
+                currentCycleSet.bitdomains[i][k].reset();
+                currentCycleSet.bitdomains[i][k].set(diag[i]);
             }
             fixedCycleSet[i][i][k]=true;
         }       

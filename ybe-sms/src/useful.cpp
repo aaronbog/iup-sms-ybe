@@ -46,21 +46,11 @@ void printDomains(const cycle_set_t &cycset)
     {
       for (auto dom : row)
       {
-        dom.printDomain();
+        dom.print();
         printf("\t");
       }
       printf("\n");
     }
-
-    /* for (auto row : cycset.domains)
-    {
-      for (auto dom : row)
-      {
-        dom.printDomain();
-        printf("\t");
-      }
-      printf("\n");
-    } */
 }
 
 void printAssignments(const cycle_set_t &cycset)
@@ -182,16 +172,12 @@ vector<vector<int>> permToCyclePerm(vector<int> &perm){
 }
 
 void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &part){
-  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size));
-  
-  for(int pt = 0; pt<parts.size(); pt++)
-    parts[pt].dom.reset();
-
+  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size,false));
   for(auto cyc : perm){
     int len = cyc.size();
     if(len!=0){
       for(int el : cyc)
-        parts[len-1].add_value(el);
+        parts[len-1].set(el);
     }
   }
 
@@ -199,7 +185,7 @@ void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &p
     remove_if(
       parts.begin(),
       parts.end(), 
-      [](bitdomain_t d){return d.is_empty();}),
+      [](bitdomain_t d){return d.none();}),
       parts.end()
   );
 
@@ -208,20 +194,24 @@ void cycleToParts(vector<vector<int>> &perm, vector<int> &elOrd, vector<bool> &p
   for(int i=0; i<parts.size();i++){
     mins[i][1]=i;
     //mins[i][0]=*min_element(parts[i].dom.begin(),parts[i].dom.end());
-    mins[i][0]=parts[i].dom.find_first();
+    mins[i][0]=parts[i].firstel;
   }
 
   sort(mins.begin(),mins.end(),[](vector<int>el1,vector<int>el2){return el1[0]<el2[0];});
 
   for(auto el : mins){
     bool first=true;
-    for (int i = parts[el[1]].dom.find_first(); i < problem_size && i!=-1; i=parts[el[1]].dom.find_next(i)){
-      if(first){
-        part.push_back(true);
-        first=false;
-      } else 
-        part.push_back(false);
-      elOrd.push_back(i);
+    for (int i = parts[el[1]].firstel; i < problem_size && i!=-1; i++){
+      if(!parts[el[1]].dom[i])
+        continue;
+      else {
+        if(first){
+          part.push_back(true);
+          first=false;
+        } else 
+          part.push_back(false);
+        elOrd.push_back(i);
+      }     
     }
   }
 }
@@ -336,7 +326,6 @@ bool pperm_plain::fixed(int el){
 }
 
 bool pperm_plain::fullDefined(){
-  bool full = true;
   for(int i=0; i<problem_size; i++){
     if(!fixed(i))
       return false;
@@ -345,7 +334,8 @@ bool pperm_plain::fullDefined(){
 }
 
 bool pperm_plain::fix(int el, int img){
-  if(fixed(el) || (invPermOf(img)!=-1 && fixed(invPermOf(img)))){
+  int iperm = invPermOf(img);
+  if(fixed(el) || (iperm!=-1 && fixed(iperm))){
     return element[el]==img;
   }
   
@@ -389,6 +379,7 @@ vector<int> pperm_plain::options(int el){
     if(part[i]==true)
       p=i;
   }
+
   if(p==el && (p==problem_size-1 || part[p+1]==true)){
     options.push_back(element[el]);
   } else {
@@ -401,6 +392,12 @@ vector<int> pperm_plain::options(int el){
       options.push_back(element[i]);
     }
   }
+  /* sort(options.begin(),options.end());
+  if(rev)
+    reverse(options.begin(),options.end());
+  auto indp = find(options.begin(),options.end(),p);
+  if(indp!=options.end())
+    swap(*indp,*options.begin()); */
   return options;
 }
 
@@ -429,26 +426,51 @@ vector<int> pperm_plain::invOptions(int el){
       options.push_back(i);
     }
   }
+  /* sort(options.begin(),options.end());
+  if(rev)
+    reverse(options.begin(),options.end());
+  auto indp = find(options.begin(),options.end(),p);
+  if(indp!=options.end())
+    swap(*indp,*options.begin()); */
   return options;
 }
 
-pperm_bit::pperm_bit(){
+vector<pperm_bit> combinePerms(vector<pperm_bit> &perms){
+  int numPerms = perms.size();
+  for(int i=0; i<numPerms; i++){
+    for(int j=0; j<numPerms; j++){
+      if(i==j)
+        continue;
+      int totalDiffs = 0;
+      int diffIndex = -1;
+      for(int k=0; k<problem_size;k++){
+        for(int l=0; l<problem_size; l++){
+          if(perms[i].info.get(k,l)!=perms[j].info.get(k,l)){
+            totalDiffs+=1;
+            diffIndex=k;
+          }
+        }
+      }
+      if(totalDiffs==1){
+        for (std::size_t k=0; k<problem_size; ++k){
+          perms[i].info.dom[perms[i].info.chunk*diffIndex+2+k]=perms[i].info.dom[perms[i].info.chunk*diffIndex+2+k]^perms[j].info.dom[perms[j].info.chunk*diffIndex+2+k];
+        }
+        perms.erase(perms.begin()+j);
+      } 
+    }
+  }
+  return perms;
 }
-
-pperm_bit::~pperm_bit(){}
 
 pperm_bit::pperm_bit(vector<int> perm){
   auto cyc = permToCyclePerm(perm);
-  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size));
-  
-  for(int pt = 0; pt<problem_size; pt++)
-    parts[pt].dom.reset();
+  vector<bitdomain_t> parts = vector<bitdomain_t>(problem_size,bitdomain_t(problem_size,false));
 
   for(auto c : cyc){
     int len = c.size();
     if(len!=0){
       for(int el : c)
-        parts[len-1].add_value(el);
+        parts[len-1].set(el);
     }
   }
 
@@ -456,32 +478,84 @@ pperm_bit::pperm_bit(vector<int> perm){
     remove_if(
       parts.begin(),
       parts.end(), 
-      [](bitdomain_t d){return d.is_empty();}),
+      [](bitdomain_t d){return d.none();}),
       parts.end()
   );
 
-  elements = vector<bitdomain_t>(problem_size,bitdomain_t());
+  info = bitdomains2_t(false);
   
   for(int i=0; i<parts.size();i++){
-    for(int j : parts[i].options()){
-      elements[j].dom=boost::dynamic_bitset<>(parts[i].dom);
+    if(!parts[i].none()){
+        vector<int> opts=parts[i].options();
+        for(int j : opts){
+          info.dom[info.chunk*j]=parts[i].firstel;
+          info.dom[info.chunk*j+1]=parts[i].numTrue;
+          int l=2;
+          for(auto k : parts[i].dom)
+            info.dom[j*info.chunk+(l++)]=k;
+        }
     }
   }
 }
+pperm_bit::pperm_bit(){
+}
+pperm_bit::~pperm_bit(){
+}
+shared_ptr<pperm_common> pperm_bit::copyPerm(){
+  return make_shared<pperm_bit>(pperm_bit(*this));
+}
 
-void pperm_bit::print(){
-  for(int i=0; i<problem_size; i++){
-    printf("%d:",i);
-    elements[i].printDomain();
-    printf(", ");
+int pperm_bit::permOf(int p){
+  if(fixed(p)){
+    return info.firstel(p);
+  } else
+    return -1;
+}
+
+vector<int> pperm_bit::options(int p){
+  auto options = info.options(p);
+  return options;
+}
+
+vector<int> pperm_bit::invOptions(int p){
+  vector<int> options = vector<int>();
+  for(int i = 0; i<problem_size; i++){
+    if(info.get(i,p))
+      options.push_back(i);
   }
-  printf("\n");
+  
+  return options;
 }
 
-bool pperm_bit::fixed(int el){
-  return elements[el].dom.count()==1;
+int pperm_bit::invPermOf(int p){
+  for(int i=0; i<problem_size; i++){
+    if(permOf(i)==p)
+      return i;
+  }
+  return -1;
 }
+bool pperm_bit::fixed(int p){
+  return info.numtrue(p)==1;
+}
+bool pperm_bit::fix(int p, int pp){
+  if(!info.get(p,pp))
+    return false;
 
+  for (int i=0;i<problem_size;i++) {
+    if(i==p){
+      info.reset(i);
+      info.set(i,pp);
+    } else {
+      info.reset(i,pp);
+      if(info.none(i))
+        return false;
+    }
+  }
+  return true;
+}
+void pperm_bit::print(){
+  info.print();
+}
 bool pperm_bit::fullDefined(){
   for(int i=0; i<problem_size; i++){
     if(!fixed(i))
@@ -489,60 +563,60 @@ bool pperm_bit::fullDefined(){
   }
   return true;
 }
-
-bool pperm_bit::fix(int el, int img){
-  if(!elements[el].dom[img])
-    return false;
-
-  
-  for(int i =0; i<problem_size; i++){
-    if(i==el)
-      elements[i].set_value(img);
-    else{
-      elements[i].delete_value(img);
-      if(elements[i].is_empty())
-        return false;
-    }
-  }
-  return true;
-}
-
-int pperm_bit::permOf(int el){
-  if(fixed(el)){
-    return elements[el].dom.find_first();
-  } else
-    return -1;
-}
-
-int pperm_bit::invPermOf(int el){
-  for(int i=0; i<problem_size; i++){
-    if(permOf(i)==el)
-      return i;
-  }
-  return -1;
-}
-
-shared_ptr<pperm_common> pperm_bit::copyPerm(){
-  return make_shared<pperm_bit>(pperm_bit(*this));
-}
-
-vector<int> pperm_bit::options(int el){
-  return elements[el].options();
-}
-
-vector<int> pperm_bit::invOptions(int el){
-  vector<int> options = vector<int>();
-  for(int i = 0; i<elements.size(); i++){
-    if(elements[i].dom[el])
-      options.push_back(i);
-  }
-  return options;
-}
-
 vector<int> pperm_bit::getPerm(){
   vector<int> perm = vector<int>(problem_size,-1);
   for(int i=0; i<problem_size; i++){
-    perm[i]=elements[i].dom.find_first();
+    if(this->fixed(i))
+      perm[i]=info.firstel(i);
+    else
+      perm[i]=-1;
   }
   return perm;
 }
+
+/* void pperm_bit::set(int e,int n){
+  if(info[(problem_size+3)*e+3+n]==1)
+    return;
+
+  info[(problem_size+3)*e+3+n]=1;
+  info[(problem_size+3)*e+2]+=1;
+  int firstel=info[(problem_size+3)*e+1];
+  if(firstel==-1 || n<firstel)
+    info[(problem_size+3)*e+1]=n;
+}
+void pperm_bit::reset(int e,int n){
+  if(info[(problem_size+3)*e+3+n]==0)
+    return;
+
+  info[(problem_size+3)*e+3+n]=0;
+  info[(problem_size+3)*e+2]-=1;
+  int firstel=info[(problem_size+3)*e+1];
+  if(n==firstel){
+    for(int i=n+1;i<problem_size;i++){
+      if(info[(problem_size+3)*e+3+i]==1){
+        info[(problem_size+3)*e+1]=i;
+        break;
+      }
+    }
+    if(info[(problem_size+3)*e+1]==n)
+      info[(problem_size+3)*e+1]=-1;
+  }
+}
+void pperm_bit::set(int e){
+  for(int i=0;i<problem_size;i++)
+    info[(problem_size+3)*e+3+i]=1;
+  info[(problem_size+3)*e+1]=0;
+  info[(problem_size+3)*e+2]=problem_size;
+}
+void pperm_bit::reset(int e){
+  for(int i=0;i<problem_size;i++)
+    info[(problem_size+3)*e+3+i]=0;
+  info[(problem_size+3)*e+1]=-1;
+  info[(problem_size+3)*e+2]=0;
+}
+bool pperm_bit::none(int e){
+  return find_if(info.begin()+(problem_size+3)*e+3, info.begin()+(problem_size+3)*(e+1), [](bool x){return x==1;}) == info.begin()+(problem_size+3)*(e+1);
+}
+void pperm_bit::print(int e){
+  printf("ToDo\n");
+}*/
