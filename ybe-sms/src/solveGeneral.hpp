@@ -14,6 +14,9 @@ public:
   vector<vector<vector<lit_t>>> cycset_lits;
   statistics stats;
   FILE *output;
+  FILE *state;
+  FILE *sols;
+  FILE *sbc;
   MinCheckCommon *mincheck;
   // functions which must be implemented for the concrete solver
 protected:

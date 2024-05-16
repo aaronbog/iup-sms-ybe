@@ -21,11 +21,14 @@ protected:
     cyclePerm_t diag;
     shared_ptr<pperm_common> initialPart;
     bool diagIsId;
-    int depth;
+    int its;
     bool permIsId(vector<int> &perm);
     int permFullyDefinedCheck(vector<int> &perm, int i, int j);
     void addClauses(vector<int> &perm, int r, int c);
-    
+    void addClausesShort(vector<int> &perm, int r, int c);
+    void toClause(vector<bitdomains2_t> &lits, vector<vector<int>> &clss);
+    void addToClause(int r, int c, int lit, vector<bitdomains2_t> &lits, bool neg);
+    void addClauses(vector<int> &perm, int r, int c, bool old);
 };
 
 #endif

@@ -3,7 +3,6 @@
 #include "solveCadicalClass.hpp"
 #include "cadical.hpp"
 #include "minCheck_V2.h"
-#include "minCheck_V3.h"
 
 // add formula and register propagator
 CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
@@ -29,6 +28,48 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     FILE *fp;
     fp = fopen(outputFilePath.c_str(),"w");
     this->output=fp;
+
+    
+    string stateFilePath;
+    string secFilePath;
+    string sbcFilePath;
+    if(readState || saveState){
+        stateFilePath.append(solOutput);
+        stateFilePath.append("state_");
+        stateFilePath.append(to_string(problem_size));
+        stateFilePath.append("_");
+        for(auto d : diag)
+            stateFilePath.append(to_string(d));
+        stateFilePath.append(".txt");
+
+        FILE *sfp;
+        sfp = fopen(stateFilePath.c_str(),"a+");
+        this->state=sfp;
+
+        secFilePath.append(solOutput);
+        secFilePath.append("sec_");
+        secFilePath.append(to_string(problem_size));
+        secFilePath.append("_");
+        for(auto d : diag)
+            secFilePath.append(to_string(d));
+        secFilePath.append(".txt");
+
+        FILE *secfp;
+        secfp = fopen(secFilePath.c_str(),"a+");
+        this->sols=secfp;
+
+        sbcFilePath.append(solOutput);
+        sbcFilePath.append("sbc_");
+        sbcFilePath.append(to_string(problem_size));
+        sbcFilePath.append("_");
+        for(auto d : diag)
+            sbcFilePath.append(to_string(d));
+        sbcFilePath.append(".txt");
+
+        FILE *sbcfp;
+        sbcfp = fopen(sbcFilePath.c_str(),"a+");
+        this->sbc=sbcfp;
+    }
 
     // only_propagating = false;
     solver = new CaDiCaL::Solver();
@@ -95,10 +136,32 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     /* printCycleSet(currentCycleSet);
     printDomains(currentCycleSet); */
 
-    if(minCheckOld)
-        mincheck = new MinCheck_V3(diag,cycset_lits);
-    else
-        mincheck = new MinCheck_V2(diag,cycset_lits);
+    if(readState){
+        ifstream toParse(secFilePath);
+        vector<vector<int>> toAdd;
+        string temp;
+        while (getline(toParse, temp)) {
+            istringstream buffer(temp);
+            vector<int> line((istream_iterator<int>(buffer)),istream_iterator<int>());
+            toAdd.push_back(line);
+        }
+
+        ifstream toParse2(sbcFilePath);
+        while (getline(toParse2, temp)) {
+            istringstream buffer(temp);
+            vector<int> line((istream_iterator<int>(buffer)),istream_iterator<int>());
+            toAdd.push_back(line);
+        }
+        for(auto c : toAdd){
+            for(int l : c){
+                solver->add(l);
+                printf("%d ",l);
+            }
+            printf("\n");
+        }
+    }
+        
+    mincheck = new MinCheck_V2(diag,cycset_lits);
 
     //mincheck = MinimalityChecker(diag,cycset_lits);
 }
@@ -130,9 +193,9 @@ void CadicalSolver::solve(vector<int> assumptions)
     {
         for (auto lit : assumptions)
             solver->assume(lit);
-        //solver->statistics();
         //solver->resources();
     } while (solver->solve() == 10);
+    solver->statistics();
     fclose(output);
 }
 

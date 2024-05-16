@@ -53,7 +53,7 @@ void Stats::print (Internal * internal) {
   size_t extendbytes = internal->external->extension.size ();
   extendbytes *= sizeof (int);
 
-  SECTION ("clauses");
+  /* SECTION ("clauses");
   printf("total current: %d,\tadded: %d\n",stats.current.total,stats.added.total);
   printf("redun current: %d,\tadded: %d\n",stats.current.redundant,stats.added.redundant);
   printf("irred current: %d,\tadded: %d\n",stats.current.irredundant,stats.added.irredundant);
@@ -62,7 +62,7 @@ void Stats::print (Internal * internal) {
   printf("clauses: %d\n",stats.garbage.clauses);
   printf("literals: %d\n",stats.garbage.literals);
   printf("bytes: %d\n",stats.garbage.bytes);
-
+ */
   /* SECTION ("statistics");
 
   if (all || stats.blocked) {
@@ -76,12 +76,12 @@ void Stats::print (Internal * internal) {
   if (all || stats.chrono)
   PRT ("chronological:   %15" PRId64 "   %10.2f %%  of conflicts", stats.chrono, percent (stats.chrono, stats.conflicts));
   if (all)
-  PRT ("compacts:        %15" PRId64 "   %10.2f    interval", stats.compacts, relative (stats.conflicts, stats.compacts));
+  PRT ("compacts:        %15" PRId64 "   %10.2f    interval", stats.compacts, relative (stats.conflicts, stats.compacts)); */
   if (all || stats.conflicts) {
   PRT ("conflicts:       %15" PRId64 "   %10.2f    per second", stats.conflicts, relative (stats.conflicts, t));
   PRT ("  backtracked:   %15" PRId64 "   %10.2f %%  of conflicts", stats.backtracks, percent (stats.backtracks, stats.conflicts));
   }
-  if (all || stats.conditioned) {
+  /* if (all || stats.conditioned) {
   PRT ("conditioned:     %15" PRId64 "   %10.2f %%  of irredundant clauses", stats.conditioned, percent (stats.conditioned, stats.added.irredundant));
   PRT ("  conditionings: %15" PRId64 "   %10.2f    interval", stats.conditionings, relative (stats.conflicts, stats.conditionings));
   PRT ("  condcands:     %15" PRId64 "   %10.2f    candidate clauses", stats.condcands, relative (stats.condcands, stats.conditionings));

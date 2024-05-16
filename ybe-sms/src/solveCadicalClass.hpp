@@ -107,6 +107,40 @@ protected: // virtual classes from common interface
                 solver->add(l);
             solver->add(0);
         }
+        if(saveState && redundant){
+            for(auto p : clause)
+                fprintf(sbc,"%d ", p);
+            fprintf(sbc,"0\n");
+        } else if(saveState){
+            for(auto p : clause)
+                fprintf(sols,"%d ", p);
+            fprintf(sols,"0\n");
+        } else if(redundant){
+            bool unitOrFalse=true;
+            int unknown = 0;
+            for(auto l : clause){
+                auto entry = lit2entry[abs(l)];
+                auto asg = currentCycleSet.assignments[entry[0]][entry[1]][entry[2]];
+                if(l>0){
+                    if(asg==True_t){
+                        unitOrFalse=false;
+                        break;
+                    } else if (asg==Unknown_t){
+                        unknown+=1;
+                    }
+                }else if(l<0){
+                    if(asg==False_t){
+                        unitOrFalse=false;
+                        break;
+                    } else if (asg==Unknown_t){
+                        unknown+=1;
+                    }
+                }
+            }
+            if(!unitOrFalse || unknown>1){
+                printf("GEEN UNIT/BACKTRACK CLAUSE!!\n");
+            }
+        }
         //solver->resources();
     }
 

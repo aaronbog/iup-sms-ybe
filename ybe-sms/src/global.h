@@ -9,8 +9,10 @@ extern bool diagPart;
 extern int problem_size;
 extern int checkFreq;
 extern int maxDepth;
+extern int maxBreadth;
+extern int maxDepth;
+extern int maxMC;
 extern bool doFinalCheck;
-extern bool minCheckOld;
 extern bool useBit;
 extern bool rev;
 extern int logging;
@@ -39,6 +41,8 @@ extern bool smallerEncoding;
 extern bool propagateMincheck;
 extern bool oldBreakingClauses;
 extern string solOutput;
+extern bool saveState;
+extern bool readState;
 
 extern string proofFile;
 

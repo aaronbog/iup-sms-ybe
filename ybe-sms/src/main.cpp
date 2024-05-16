@@ -21,6 +21,8 @@ bool oldBreakingClauses = false;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
 int maxDepth = INT_MAX;
+int maxBreadth = INT_MAX;
+int maxMC = INT_MAX;
 bool doFinalCheck=false;
 bool smallerEncoding=false;
 bool minCheckOld = false;
@@ -30,6 +32,9 @@ bool rev = false;
 int logging = 0;
 
 string solOutput = "";
+bool saveState = false;
+bool readState = false;
+
 vector<int> diagonal=vector<int>();
 
 int main(int argc, char const **argv)
@@ -97,16 +102,9 @@ int main(int argc, char const **argv)
                 continue;
             }
 
-        if (strcmp("--oldMinCheck", argv[i]) == 0)
-            {
-                minCheckOld = true;
-                continue;
-            }
-
         if (strcmp("--useBit", argv[i]) == 0)
             {
                 useBit = true;
-                printf("USING BIT");
                 continue;
             }
 
@@ -142,6 +140,30 @@ int main(int argc, char const **argv)
                 }
             }
 
+        if (strcmp("--maxMC", argv[i]) == 0)
+            {
+                i++;
+                if(atoi(argv[i])>0){
+                    maxMC = atoi(argv[i]);
+                    continue;
+                } else {
+                    printf("ERROR: invalid argument, max iterations needs to be a positive number.");
+                    EXIT_UNWANTED_STATE;
+                }
+            }
+
+        if (strcmp("--maxBreadth", argv[i]) == 0)
+            {
+                i++;
+                if(atoi(argv[i])>0){
+                    maxDepth = atoi(argv[i]);
+                    continue;
+                } else {
+                    printf("ERROR: invalid argument, maxBreadth needs to be a positive number.");
+                    EXIT_UNWANTED_STATE;
+                }
+            }
+
         if (strcmp("--rev", argv[i]) == 0)
             {
                 rev = true;
@@ -153,6 +175,18 @@ int main(int argc, char const **argv)
                 i++;
                 stringstream ss;
                 solOutput=argv[i];
+            }
+
+        if(strcmp("--save", argv[i])==0)
+            {
+                saveState=true;
+                continue;
+            }
+
+        if(strcmp("--load", argv[i])==0)
+            {
+                readState=true;
+                continue;
             }
 
         if(strcmp("--logging", argv[i])==0)

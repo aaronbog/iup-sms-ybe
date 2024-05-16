@@ -68,10 +68,10 @@ bool CommonInterface::checkMin(bool final)
   }
   catch (vector<clause_t> cs)
   {
-    for(auto c : cs){
+    //for(auto c : cs){
       stats.nSymBreakClauses+=1LL;
-      addClause(c,true);
-    }
+      addClause(cs.front(),true);
+    //}
     res=false;
     failed=true;
   } 
