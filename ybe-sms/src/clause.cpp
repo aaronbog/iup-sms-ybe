@@ -392,6 +392,13 @@ void fixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<
         cl.push_back(cycset_lits[0][i][firstRow[i]]);
         cnf->push_back(cl);
     }
+    for(int i=0;i<problem_size;i++){
+        if(diagPart && i==1)
+            continue;
+        clause_t cl;
+        cl.push_back(cycset_lits[1][i][firstRow[i]]);
+        cnf->push_back(cl);
+    }
 }
 
 void unfixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow){
@@ -400,6 +407,11 @@ void unfixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vecto
         if(diagPart && i==0)
             continue;
         cl.push_back(-cycset_lits[0][i][firstRow[i]]);
+    }
+    for(int i=0;i<problem_size;i++){
+        if(diagPart && i==1)
+            continue;
+        cl.push_back(-cycset_lits[1][i][firstRow[i]]);
     }
     cnf->push_back(cl);
 }

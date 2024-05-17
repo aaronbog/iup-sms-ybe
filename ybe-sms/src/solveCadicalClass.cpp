@@ -196,7 +196,13 @@ void CadicalSolver::fixFirstRow(vector<int> firstRow)
         if(diagPart && k==0)
             continue;
         currentCycleSet.bitdomains[0][k].set(firstRow[k]);
-        fixedCycleSet[0][0][k]=true;
+        fixedCycleSet[0][k][firstRow[k]]=true;
+    }
+    for(int k=0; k<problem_size; k++){
+        if(diagPart && k==1)
+            continue;
+        currentCycleSet.bitdomains[1][k].set(firstRow[k]);
+        fixedCycleSet[1][k][firstRow[k]]=true;
     }
 }
 

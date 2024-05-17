@@ -124,7 +124,6 @@ protected: // virtual classes from common interface
                 auto asg = currentCycleSet.assignments[entry[0]][entry[1]][entry[2]];
                 if(l>0){
                     if(asg==True_t){
-                        printf("M_%d_%d_%d is true!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unitOrFalse=false;
                         break;
                     } else if (asg==Unknown_t){
@@ -132,11 +131,9 @@ protected: // virtual classes from common interface
                     }
                 }else if(l<0){
                     if(asg==False_t){
-                        printf("M_%d_%d_%d is tfalserue!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unitOrFalse=false;
                         break;
                     } else if (asg==Unknown_t){
-                        printf("M_%d_%d_%d is unknown!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unknown+=1;
                     }
                 }
