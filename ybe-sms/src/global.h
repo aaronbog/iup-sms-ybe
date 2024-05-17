@@ -6,6 +6,7 @@
 extern int nextFreeVariable;
 extern bool allModels;
 extern bool diagPart;
+extern int fixedRow;
 extern int problem_size;
 extern int checkFreq;
 extern int maxDepth;
@@ -14,7 +15,6 @@ extern int maxDepth;
 extern int maxMC;
 extern bool doFinalCheck;
 extern bool useBit;
-extern bool rev;
 extern int logging;
 
 #define COUNT_ASSIGNED 0

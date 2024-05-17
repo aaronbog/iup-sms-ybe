@@ -10,3 +10,5 @@ void atLeastOne(cnf_t *cnf, vector<int> alo);
 void atMostOne(cnf_t *cnf, vector<int> alo);
 void exactlyOne(cnf_t *cnf, vector<int> eo,int &nextFree);
 pair<int,cnf_t> commanderEncoding(vector<int> amo, int &nextFree);
+void fixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow);
+void unfixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow);

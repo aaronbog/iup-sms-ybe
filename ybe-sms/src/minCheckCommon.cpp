@@ -19,8 +19,10 @@ bool MinCheckCommon::preCheck(cycle_set_t &cycset, vector<vector<vector<lit_t>>>
         for(int j = 0; j<problem_size; j++){
             if(count(cycset.matrix[j].begin(), cycset.matrix[j].end(), i)>1){
                 return true;
+            } else if(cycset.bitdomains[i][j].numTrue==0){
+                return true;
             }
-            if(cycset.matrix[i][j]==-1 ||  cycset.matrix[i][j]!=j)
+            if(cycset.matrix[i][j]!=j)
                 isID=false;
         }
     }
@@ -246,9 +248,17 @@ void MinCheckCommon::toClause(vector<bitdomains2_t> &lits, vector<vector<int>> &
     vector<int> cls = vector<int>();
     for(int r=0;r<problem_size;r++){
         for(int c=0;c<problem_size;c++){
-            if(lits[r].numtrue(c)==problem_size-2){
+            if(diagPart && lits[r].numtrue(c)==problem_size-2){
                 for(int i=0;i<problem_size;i++){
                     if(i!=cycset.matrix[r][r]&& !lits[r].get(c,i)){
+                        cls.push_back(-cycset_lits[r][c][i]);
+                        if(logging>1)
+                            printf("-M_%d_%d_%d\n",r,c,i);
+                    }
+                }
+            } else if(!diagPart && lits[r].numtrue(c)==problem_size-1){
+                for(int i=0;i<problem_size;i++){
+                    if(!lits[r].get(c,i)){
                         cls.push_back(-cycset_lits[r][c][i]);
                         if(logging>1)
                             printf("-M_%d_%d_%d\n",r,c,i);
@@ -269,8 +279,14 @@ void MinCheckCommon::toClause(vector<bitdomains2_t> &lits, vector<vector<int>> &
 void MinCheckCommon::addToClause(int r, int c, int lit, vector<bitdomains2_t> &lits, bool neg=false){
     if(neg){
         for(int i=0;i<problem_size;i++){
-            if(i!=lit && i!=cycset.matrix[r][r]){
-                lits[r].set(c,i);
+            if(diagPart){
+                if(i!=lit && i!=cycset.matrix[r][r]){
+                    lits[r].set(c,i);
+                }
+            } else {   
+                if(i!=lit){
+                    lits[r].set(c,i);
+                }
             }
         }
     } else {

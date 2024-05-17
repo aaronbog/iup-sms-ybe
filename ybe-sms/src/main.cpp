@@ -15,6 +15,7 @@ int checkFreq = 40;
 clock_t startOfSolving;
 bool allModels = false;
 bool diagPart = false;
+int fixedRow = 0;
 bool parallel = false;
 bool propagateMincheck = false;
 bool oldBreakingClauses = false;
@@ -28,7 +29,6 @@ bool smallerEncoding=false;
 bool minCheckOld = false;
 bool useBit = false;
 bool useRange = false;
-bool rev = false;
 int logging = 0;
 
 string solOutput = "";
@@ -36,6 +36,7 @@ bool saveState = false;
 bool readState = false;
 
 vector<int> diagonal=vector<int>();
+vector<int> firstRow=vector<int>();
 
 int main(int argc, char const **argv)
 {
@@ -126,6 +127,38 @@ int main(int argc, char const **argv)
                     printf("ERROR: invalid argument, diagonal has length %lu different from problem size %d.", diagonal.size(),problem_size);
                     EXIT_UNWANTED_STATE;
                 }
+                diagPart=true;
+            }
+
+        if(strcmp("--firstRow", argv[i])==0)
+            {
+                i++;
+                int element;
+                stringstream ss;
+                ss<<argv[i];
+                while (ss >> element)
+                {
+                    firstRow.push_back(element);
+
+                    if (ss.peek() == ',')
+                        ss.ignore();
+                }
+                if(firstRow.size()!=problem_size){
+                    printf("ERROR: invalid argument, first row has length %lu different from problem size %d.", firstRow.size(),problem_size);
+                    EXIT_UNWANTED_STATE;
+                }
+            }
+
+        if(strcmp("--fixFR", argv[i])==0)
+            {
+                fixedRow=1;
+                continue;
+            }
+
+        if(strcmp("--unfixFR", argv[i])==0)
+            {
+                fixedRow=-1;
+                continue;
             }
 
         if (strcmp("--maxDepth", argv[i]) == 0)
@@ -164,12 +197,6 @@ int main(int argc, char const **argv)
                 }
             }
 
-        if (strcmp("--rev", argv[i]) == 0)
-            {
-                rev = true;
-                continue;
-            }
-
         if(strcmp("--out", argv[i])==0)
             {
                 i++;
@@ -177,7 +204,7 @@ int main(int argc, char const **argv)
                 solOutput=argv[i];
             }
 
-        if(strcmp("--save", argv[i])==0)
+        /* if(strcmp("--save", argv[i])==0)
             {
                 saveState=true;
                 continue;
@@ -187,7 +214,7 @@ int main(int argc, char const **argv)
             {
                 readState=true;
                 continue;
-            }
+            } */
 
         if(strcmp("--logging", argv[i])==0)
             {
@@ -264,7 +291,7 @@ int main(int argc, char const **argv)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), cycset_lits, vector<vector<vector<int>>>(), stats);
+        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), vector<int>(), cycset_lits, vector<vector<vector<int>>>(), stats);
         solver->solve();
 
         printf("Total time: %f\n", (duration_cast<nanoseconds>(steady_clock::now()-stats.start).count()) / 1000000000.0);
@@ -330,7 +357,7 @@ int main(int argc, char const **argv)
                     highestVariable = max(highestVariable, abs(lit));
             }
 
-            solver = new CadicalSolver(cnf, highestVariable,d, cycset_lits, cycset_lits_ord, stats);
+            solver = new CadicalSolver(cnf, highestVariable,d, vector<int>(), cycset_lits, cycset_lits_ord, stats);
             solver->solve();
             numSols[i]=solver->nModels;
 
@@ -369,6 +396,12 @@ int main(int argc, char const **argv)
         
         YBEClauses(&cnf, diagonal, nextFreeVariable, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
 
+        if(fixedRow>0){
+            fixFirstRow(&cnf,cycset_lits,firstRow);
+        } else if(fixedRow<0){
+            unfixFirstRow(&cnf,cycset_lits,firstRow);
+        }
+
         //encodeOrder(&cnf, diagonal, nextFreeVariable, cycset_lits_ord, cycset_lits);
 
         // check if zero literal
@@ -388,7 +421,7 @@ int main(int argc, char const **argv)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(cnf, highestVariable, diagonal, cycset_lits, cycset_lits_ord, stats);
+        solver = new CadicalSolver(cnf, highestVariable, diagonal, firstRow, cycset_lits, cycset_lits_ord, stats);
         solver->solve();
         totalModels=solver->nModels;
 

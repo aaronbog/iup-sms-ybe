@@ -27,9 +27,10 @@ private:
     vector<vector<int>> literal2clausePos; // for each edge variable store clause which was used the last time.
     vector<vector<int>> literal2clauseNeg; // for each negation of an edge variable
     void fixDiag(vector<int> diag);
+    void fixFirstRow(vector<int> firstRow);
+    
 public:
-    CadicalSolver(cnf_t &cnf, int highestVariable);
-    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> cycset_lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats);
+    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> cycset_lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats);
     ~CadicalSolver() { solver->disconnect_external_propagator(); }
 
 protected: // virtual classes from common interface
@@ -74,7 +75,7 @@ protected: // virtual classes from common interface
                             cycset.assignments[i][j][k]=True_t;
                             //cycset.domains[i][j].dom=vector<int>{k};
                             cycset.bitdomains[i][j].reset();
-                                cycset.bitdomains[i][j].set(k);
+                            cycset.bitdomains[i][j].set(k);
                             for(int l=0; l<problem_size; l++){
                                 if(j!=l)
                                     cycset.bitdomains[i][l].reset(k);
@@ -123,6 +124,7 @@ protected: // virtual classes from common interface
                 auto asg = currentCycleSet.assignments[entry[0]][entry[1]][entry[2]];
                 if(l>0){
                     if(asg==True_t){
+                        printf("M_%d_%d_%d is true!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unitOrFalse=false;
                         break;
                     } else if (asg==Unknown_t){
@@ -130,9 +132,11 @@ protected: // virtual classes from common interface
                     }
                 }else if(l<0){
                     if(asg==False_t){
+                        printf("M_%d_%d_%d is tfalserue!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unitOrFalse=false;
                         break;
                     } else if (asg==Unknown_t){
+                        printf("M_%d_%d_%d is unknown!!!!!!!\n",entry[0],entry[1],entry[2]);
                         unknown+=1;
                     }
                 }
@@ -142,6 +146,21 @@ protected: // virtual classes from common interface
             }
         }
         //solver->resources();
+    }
+
+    void prop(int r, int c, int val){
+        for(int l=0; l<problem_size; l++){
+            if(c==l)
+                continue;
+            else {
+                if(currentCycleSet.bitdomains[r][l].numTrue!=1){
+                    currentCycleSet.bitdomains[r][l].reset(val);
+                    if(currentCycleSet.bitdomains[r][l].numTrue==1){
+                        prop(r,l,currentCycleSet.bitdomains[r][l].firstel);
+                    }
+                }
+            }
+        }
     }
 
 public:
@@ -163,15 +182,16 @@ public:
             currentCycleSet.bitdomains[entry[0]][entry[1]].reset();
             currentCycleSet.bitdomains[entry[0]][entry[1]].set(entry[2]);
             //currentCycleSet.domains[entry[0]][entry[1]].dom=vector<int>{entry[2]};
+            //prop(entry[0],entry[1],entry[2]);
             for(int l=0; l<problem_size; l++){
                 if(entry[1]==l)
                     continue;
                 else {
                     //currentCycleSet.domains[entry[0]][l].delete_value(entry[2]);
-                    currentCycleSet.bitdomains[entry[0]][l].reset(entry[2]);
+                    if(currentCycleSet.bitdomains[entry[0]][l].numTrue!=1)
+                        currentCycleSet.bitdomains[entry[0]][l].reset(entry[2]);
                 }
             }
-            
         }
         else
         {
@@ -201,10 +221,13 @@ public:
             for (int l : last)
             {
                 auto entry = lit2entry[l];
+                //printf("Entry %d %d = %d\n",entry[0],entry[1],entry[2]);
+
                 if (fixedCycleSet[entry[0]][entry[1]][entry[2]])
                     continue;
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==True_t){
+                    //printf("Reset %d %d = %d was 1\n",entry[0],entry[1],entry[2]);
                     currentCycleSet.matrix[entry[0]][entry[1]]=-1;
                     currentCycleSet.bitdomains[entry[0]][entry[1]].set();
                     for(int j=0;j<problem_size;j++){
@@ -223,6 +246,7 @@ public:
                 }
 
                 if(currentCycleSet.assignments[entry[0]][entry[1]][entry[2]]==False_t){
+                    //printf("Reset %d %d = %d was 0\n",entry[0],entry[1],entry[2]);
                     currentCycleSet.bitdomains[entry[0]][entry[1]].set(entry[2]);
                 }
 
@@ -230,6 +254,9 @@ public:
             }
             current_trail.pop_back();
         }
+        /* printPartiallyDefinedCycleSet(currentCycleSet);
+        printDomains(currentCycleSet);
+        printf("----------\n"); */
     }
 
     // currently not checked in propagator but with the normal incremental interface to allow adding other literals or even new once.
@@ -285,7 +312,7 @@ public:
         //cycle_set_t cyc = getCycleSet();
         for(int i=0; i<problem_size; i++){
             for(int j=0; j<problem_size; j++){
-                if(i!=j && currentCycleSet.matrix[i][j]==-1){
+                if((!diagPart || i!=j) && currentCycleSet.bitdomains[i][j].numTrue>1){
                     int min = currentCycleSet.bitdomains[i][j].firstel;
                     return cycset_lits[i][j][min];
                 }

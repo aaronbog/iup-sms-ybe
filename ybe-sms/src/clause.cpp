@@ -383,3 +383,23 @@ void YBEClauses(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset
                 t+=1;
             }
 }
+
+void fixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow){
+    for(int i=0;i<problem_size;i++){
+        if(diagPart && i==0)
+            continue;
+        clause_t cl;
+        cl.push_back(cycset_lits[0][i][firstRow[i]]);
+        cnf->push_back(cl);
+    }
+}
+
+void unfixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow){
+    clause_t cl;
+    for(int i=0;i<problem_size;i++){
+        if(diagPart && i==0)
+            continue;
+        cl.push_back(-cycset_lits[0][i][firstRow[i]]);
+    }
+    cnf->push_back(cl);
+}

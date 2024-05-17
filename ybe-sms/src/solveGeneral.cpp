@@ -172,7 +172,6 @@ void CommonInterface::printStatistics()
 {
   printf("Time in propagator: %f\n", (stats.timePropagator));
   printf("Time in minimality check: %f\n", (stats.timeMinimalityCheck));
-  printf("Time in check full graphs: %f\n", (stats.timeCheckFullGraphs));
   printf("Calls of check: %lld\n", stats.callsCheck);
   printf("Calls propagator: %lld\n", stats.callsPropagator);
   printf("Number of symmetry breaking constraints: %lld\n", stats.nSymBreakClauses);

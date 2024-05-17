@@ -11,6 +11,7 @@ public:
   virtual ~CommonInterface() {}
   int nModels = 0;
   vector<int> diag;
+  vector<int> firstRow;
   vector<vector<vector<lit_t>>> cycset_lits;
   statistics stats;
   FILE *output;

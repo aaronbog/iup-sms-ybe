@@ -5,8 +5,6 @@
 
 int problem_size = 3;
 
-bool rev = false;
-
 int main(int argc, char const **argv)
 {
     // argument parsing

@@ -5,12 +5,13 @@
 #include "minCheck_V2.h"
 
 // add formula and register propagator
-CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
+CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
 {
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
     this->stats=stats;
     this->diag=diag;
+    this->firstRow=firstRow;
     currentCycleSet = cycle_set_t(problem_size,lits);
     fixedCycleSet = vector<vector<vector<bool>>>(problem_size, vector<vector<bool>>(problem_size, vector<bool>(problem_size, false)));
     // The root-level of the trail is always there
@@ -133,6 +134,9 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     if(diagPart)
         fixDiag(diag);
 
+    if(fixedRow>0)
+        fixFirstRow(firstRow);
+
     /* printCycleSet(currentCycleSet);
     printDomains(currentCycleSet); */
 
@@ -183,6 +187,16 @@ void CadicalSolver::fixDiag(vector<int> diag)
             fixedCycleSet[i][i][k]=true;
         }       
     currentCycleSet.matrix[i][i]=diag[i];
+    }
+}
+
+void CadicalSolver::fixFirstRow(vector<int> firstRow)
+{
+    for(int k=0; k<problem_size; k++){
+        if(diagPart && k==0)
+            continue;
+        currentCycleSet.bitdomains[0][k].set(firstRow[k]);
+        fixedCycleSet[0][0][k]=true;
     }
 }
 
