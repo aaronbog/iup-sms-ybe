@@ -5,7 +5,7 @@
 #include "minCheck_V2.h"
 
 // add formula and register propagator
-CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats)
+CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> lits, statistics stats)
 {
     this->highestVariable = highestVariable;
     this->cycset_lits=lits;
@@ -97,7 +97,7 @@ CadicalSolver::CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, 
     for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
             for (int k = 0; k < problem_size; k++)
-                if(!diagPart || (i!=j && (!smallerEncoding||k!=diag[i])))
+                if(!diagPart || (!smallerEncoding||(i!=j && k!=diag[i])))
                 {
                     lit2entry.push_back(vector<int>{i,j,k});
                     highestEdgeVariable++;

@@ -200,9 +200,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
 
         } else {
             int max = -1;
-            int min = problem_size;
             int maxi = -1;
-            int mini = -1;
 
             vector<int> alreadyDefined = vector<int>();
             
@@ -210,22 +208,12 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
                 auto iopt = copyPerm->invOptions(pv);
                 if(iopt.size()==1){
                     alreadyDefined.push_back(iopt[0]);
-                    if(iopt[0]<min){
-                        min=iopt[0];
-                        mini=pv;
-                    }
                     if(iopt[0]>max){
                         max=iopt[0];
-                        maxi=pv;
                     }
                     continue;
                 } else {
                     int newmax = *max_element(iopt.begin(),iopt.end());
-                    int newmin = *min_element(iopt.begin(),iopt.end());
-                    if(newmin<min){
-                        min=newmin;
-                        mini=pv;
-                    }
                     if(newmax>max){
                         max=newmax;
                         maxi=pv;
@@ -261,12 +249,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } /* else if(min<minog && propagateMincheck){
-                    fixAndPropagate(copyPerm,min,mini);
-                    extendPerm(copyPerm);
-                    vector<int> p = copyPerm->getPerm();
-                    addClauses(p,0,r,oldBreakingClauses);
-                } */ else if(minog==max){
+                } else if(minog==max){
                     fixAndPropagate(copyPerm,max,maxi);
                     options_prop.push_back(copyPerm);
                 }

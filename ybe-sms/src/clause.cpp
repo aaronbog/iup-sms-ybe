@@ -5,9 +5,12 @@
 void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits)
 {   for (int i = 0; i < problem_size; i++)
         for (int j = 0; j < problem_size; j++)
-            for (int k = 0; k < problem_size; k++)
-                {if(i!=j && (!smallerEncoding||k!=d[i]))
-                    cycset_lits[i][j][k] = nextFree++;}
+            for (int k = 0; k < problem_size; k++){
+                if(smallerEncoding && i!=j && k!=d[i])
+                    cycset_lits[i][j][k] = nextFree++;
+                else if(!smallerEncoding)
+                    cycset_lits[i][j][k] = nextFree++;
+            }
     
     for(int i=0; i<problem_size; i++)
         for(int j=0; j<problem_size; j++)
@@ -21,15 +24,25 @@ void encodeEntries(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vecto
                 continue;
 
             vector<int> to_encode;
-            //clause_t cl;
             for(int j=0; j<problem_size; j++)
                 {if(j!=i)
                     to_encode.push_back(cycset_lits[i][j][k]);
                 }
             exactlyOne(cnf,to_encode,nextFree);
-            /* cnf->push_back(cl);
-            cl.clear(); */
         }
+    
+    if(!smallerEncoding){
+        for(int i=0; i<problem_size; i++){
+            vector<int> to_encode;
+            to_encode.push_back(cycset_lits[i][i][d[i]]);
+            cnf->push_back(to_encode);
+            to_encode.clear();
+            for(int k=0; k<problem_size; k++){
+                to_encode.push_back(cycset_lits[k][k][i]);
+            }
+            exactlyOne(cnf,to_encode,nextFree);
+        }
+    }
 }
 
 void encodeOrder(cnf_t *cnf, vector<int> d, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits_ord, vector<vector<vector<lit_t>>> &cycset_lits)
@@ -77,21 +90,22 @@ void encodeEntries(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cyc
     for(int i=0; i<problem_size; i++)
         for(int k=0; k<problem_size; k++)
         {
-            clause_t cl;
+            vector<int> to_encode;
+            //clause_t cl;
             for(int j=0; j<problem_size; j++)
-                cl.push_back(cycset_lits[i][j][k]);
-            cnf->push_back(cl);
-            cl.clear();
+                {
+                    to_encode.push_back(cycset_lits[i][j][k]);
+                }
+            exactlyOne(cnf,to_encode,nextFree);
         }
-    
-    for(int i=0; i<problem_size; i++)
-        {
-            clause_t cl;
-            for(int j=0; j<problem_size; j++)
-                cl.push_back(cycset_lits[j][j][i]);
-            cnf->push_back(cl);
-            cl.clear();
+
+    for(int i=0; i<problem_size; i++){
+        vector<int> to_encode;
+        for(int k=0; k<problem_size; k++){
+            to_encode.push_back(cycset_lits[k][k][i]);
         }
+        exactlyOne(cnf,to_encode,nextFree);
+    }
 }
 
 void exactlyOne(cnf_t *cnf, vector<int> eo, int &nextFree)
@@ -382,6 +396,105 @@ void YBEClauses(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset
                 
                 t+=1;
             }
+}
+
+void YBEClausesNew(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits)
+{
+    vector<vector<vector<vector<lit_t>>>> ybe_lits = vector<vector<vector<vector<lit_t>>>>(problem_size, vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size,vector<lit_t>(problem_size,0))));
+    for (int i=0; i<problem_size; i++){
+        for (int j=i+1; j<problem_size; j++){
+            for(int k=0; k<problem_size; k++){
+                for(int b=0; b<problem_size; b++){
+                    ybe_lits[i][j][k][b]=nextFree++;
+                }
+                exactlyOne(cnf,ybe_lits[i][j][k],nextFree);
+            }
+        }
+    }
+    
+    for (int i=0; i<problem_size; i++){
+        for (int j=i+1; j<problem_size; j++){
+            for(int k=0; k<problem_size; k++){
+                for(int x=0; x<problem_size; x++){
+                    for(int y=0; y<problem_size; y++){
+                        for(int b=0; b<problem_size; b++){
+                            clause_t cl;
+                            cl.push_back(-cycset_lits[i][j][x]); //x!=d[i]
+                            cl.push_back(-cycset_lits[i][k][y]); //i==k->y=d[i], else y!=d[i]
+                            cl.push_back(-cycset_lits[x][y][b]); //x==y->b=d[i], else b!=d[i]
+                            cl.push_back(ybe_lits[i][j][k][b]);
+                            cnf->push_back(cl);
+
+                            cl.clear();
+                            cl.push_back(-cycset_lits[j][i][x]);
+                            cl.push_back(-cycset_lits[j][k][y]);
+                            cl.push_back(-cycset_lits[x][y][b]);
+                            cl.push_back(ybe_lits[i][j][k][b]);
+                            cnf->push_back(cl);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void YBEClausesNew(cnf_t *cnf, int &nextFree, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> diag)
+{
+    vector<vector<vector<vector<lit_t>>>> ybe_lits = vector<vector<vector<vector<lit_t>>>>(problem_size, vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size,vector<lit_t>(problem_size,0))));
+    
+    for (int i=0; i<problem_size; i++){
+        for (int j=i+1; j<problem_size; j++){
+            for(int k=0; k<problem_size; k++){
+                for(int x=0; x<problem_size; x++){
+                    for(int y=0; y<problem_size; y++){
+                        for(int b=0; b<problem_size; b++){
+                            if(!smallerEncoding 
+                            || (x!=diag[i] && ((i!=k&&diag[i]!=y) || (i==k&&diag[i]==y)) && ((x!=y&&diag[x]!=b) || (x==y&&diag[x]==b)))){
+                                clause_t cl;
+                                cl.push_back(-cycset_lits[i][j][x]);
+                                if(!smallerEncoding || i!=k)
+                                    cl.push_back(-cycset_lits[i][k][y]);
+                                if(!smallerEncoding || x!=y)
+                                    cl.push_back(-cycset_lits[x][y][b]);
+                                if(ybe_lits[i][j][k][b]==0)
+                                    ybe_lits[i][j][k][b]=nextFree++;
+                                cl.push_back(ybe_lits[i][j][k][b]);
+                                cnf->push_back(cl);
+                            }
+                            
+                            if(!smallerEncoding 
+                            || (x!=diag[j] && ((j!=k&&diag[j]!=y) || (j==k&&diag[j]==y)) && ((x!=y&&diag[x]!=b) || (x==y&&diag[x]==b)))){
+                                clause_t cl;
+                                cl.clear();
+                                cl.push_back(-cycset_lits[j][i][x]);
+                                if(!smallerEncoding || j!=k)
+                                    cl.push_back(-cycset_lits[j][k][y]);
+                                if(!smallerEncoding || x!=y)
+                                    cl.push_back(-cycset_lits[x][y][b]);
+                                if(ybe_lits[i][j][k][b]==0)
+                                    ybe_lits[i][j][k][b]=nextFree++;
+                                cl.push_back(ybe_lits[i][j][k][b]);
+                                cnf->push_back(cl);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i=0; i<problem_size; i++){
+        for (int j=i+1; j<problem_size; j++){
+            for(int k=0; k<problem_size; k++){
+                vector<int> litsCopy;
+                copy(ybe_lits[i][j][k].begin(), ybe_lits[i][j][k].end(),back_inserter(litsCopy));
+                litsCopy.erase(remove(litsCopy.begin(),litsCopy.end(),0),litsCopy.end());
+                litsCopy.shrink_to_fit();
+                exactlyOne(cnf,litsCopy,nextFree);
+            }
+        }
+    }
 }
 
 void fixFirstRow(cnf_t *cnf, vector<vector<vector<lit_t>>> &cycset_lits, vector<int> firstRow){

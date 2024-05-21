@@ -30,7 +30,7 @@ private:
     void fixFirstRow(vector<int> firstRow);
     
 public:
-    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> cycset_lits, vector<vector<vector<lit_t>>> ord_lits, statistics stats);
+    CadicalSolver(cnf_t &cnf, int highestVariable, vector<int> diag, vector<int> firstRow, vector<vector<vector<lit_t>>> cycset_lits, statistics stats);
     ~CadicalSolver() { solver->disconnect_external_propagator(); }
 
 protected: // virtual classes from common interface
@@ -118,7 +118,7 @@ protected: // virtual classes from common interface
             fprintf(sols,"0\n");
         } else if(redundant){
             bool unitOrFalse=true;
-            int unknown = 0;
+            vector<int> unknown = vector<int>();
             for(auto l : clause){
                 auto entry = lit2entry[abs(l)];
                 auto asg = currentCycleSet.assignments[entry[0]][entry[1]][entry[2]];
@@ -126,19 +126,19 @@ protected: // virtual classes from common interface
                     if(asg==True_t){
                         unitOrFalse=false;
                         break;
-                    } else if (asg==Unknown_t){
-                        unknown+=1;
+                    } else if (asg==Unknown_t && find(unknown.begin(),unknown.end(),abs(l))==unknown.end()){
+                        unknown.push_back(abs(l));
                     }
                 }else if(l<0){
                     if(asg==False_t){
                         unitOrFalse=false;
                         break;
-                    } else if (asg==Unknown_t){
-                        unknown+=1;
+                    } else if (asg==Unknown_t && find(unknown.begin(),unknown.end(),abs(l))==unknown.end()){
+                        unknown.push_back(abs(l));
                     }
                 }
             }
-            if(!unitOrFalse || unknown>1){
+            if(!unitOrFalse || unknown.size()>1){
                 printf("GEEN UNIT/BACKTRACK CLAUSE!!\n");
             }
         }
@@ -163,9 +163,9 @@ protected: // virtual classes from common interface
 public:
     void notify_assignment(int lit, bool is_fixed)
     {
-        /* printf("ASSIGN\n");
-        printPartiallyDefinedCycleSet(currentCycleSet);
-        printDomains(currentCycleSet); */
+        //printf("ASSIGN\n");
+        //printPartiallyDefinedCycleSet(currentCycleSet);
+        //printDomains(currentCycleSet);
         changeInTrail = true;
         int absLit = abs(lit);
         if (!is_fixed) // push back literal to undo if current decission literal is changed
@@ -208,8 +208,8 @@ public:
 
     void notify_backtrack(size_t new_level)
     {
-        /* printf("BACKTRACK\n");
-        printPartiallyDefinedCycleSet(currentCycleSet);
+        //printf("BACKTRACK\n");
+        /* printPartiallyDefinedCycleSet(currentCycleSet);
         printDomains(currentCycleSet);
         printf("----------\n"); */
         while (current_trail.size() > new_level + 1)
@@ -251,9 +251,9 @@ public:
             }
             current_trail.pop_back();
         }
-        /* printPartiallyDefinedCycleSet(currentCycleSet);
-        printDomains(currentCycleSet);
-        printf("----------\n"); */
+        //printPartiallyDefinedCycleSet(currentCycleSet);
+        //printDomains(currentCycleSet);
+        //printf("----------\n");
     }
 
     // currently not checked in propagator but with the normal incremental interface to allow adding other literals or even new once.

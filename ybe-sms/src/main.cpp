@@ -247,9 +247,6 @@ int main(int argc, char const **argv)
         cnf_t cnf;
         nextFreeVariable = 1;
         vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
-        vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-        vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-        vector<vector<lit_t>> ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
 
         // create new variables
             
@@ -258,20 +255,8 @@ int main(int argc, char const **argv)
                 for (int k = 0; k < problem_size; k++)
                     cycset_lits[i][j][k] = nextFreeVariable++;
         
-        for (int i = 0; i < t; i++)
-            for (int j = 0; j < problem_size; j++)
-                ybe_lits[i][j]=nextFreeVariable++;
-        
-        for (int i = 0; i < t; i++)
-            for (int j = 0; j < problem_size*problem_size; j++)
-            {
-                ybe_left_lits[i][j]=nextFreeVariable++;
-                ybe_right_lits[i][j]=nextFreeVariable++;
-            }
-        
-        encodeEntries(&cnf,nextFreeVariable, cycset_lits);
-        YBEClauses(&cnf,nextFreeVariable,cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);        
-
+        encodeEntries(&cnf,nextFreeVariable, cycset_lits);       
+        YBEClausesNew(&cnf, nextFreeVariable,cycset_lits);
         // check if zero literal
         for (auto clause : cnf)
         {
@@ -291,7 +276,7 @@ int main(int argc, char const **argv)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), vector<int>(), cycset_lits, vector<vector<vector<int>>>(), stats);
+        solver = new CadicalSolver(cnf, highestVariable, vector<int>(), vector<int>(), cycset_lits, stats);
         solver->solve();
 
         printf("Total time: %f\n", (duration_cast<nanoseconds>(steady_clock::now()-stats.start).count()) / 1000000000.0);
@@ -328,18 +313,15 @@ int main(int argc, char const **argv)
             cnf_t cnf;
             int nextFree = 1;
 
-            vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
-            vector<vector<vector<lit_t>>> cycset_lits_ord = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));            
-            vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-            vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-            vector<vector<lit_t>> ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
+            vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));        
+            //vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
+            //vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
+            //vector<vector<lit_t>> ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
 
             encodeEntries(&cnf, d, nextFree, cycset_lits);
-
-            //encodeOrder(&cnf, d, nextFree, cycset_lits_ord, cycset_lits);
             
-            YBEClauses(&cnf, d, nextFree, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
-            
+            //YBEClauses(&cnf, d, nextFree, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
+            YBEClausesNew(&cnf, nextFree, cycset_lits, d);
             // check if zero literal
             for (auto clause : cnf)
             {
@@ -357,7 +339,7 @@ int main(int argc, char const **argv)
                     highestVariable = max(highestVariable, abs(lit));
             }
 
-            solver = new CadicalSolver(cnf, highestVariable,d, vector<int>(), cycset_lits, cycset_lits_ord, stats);
+            solver = new CadicalSolver(cnf, highestVariable,d, vector<int>(), cycset_lits, stats);
             solver->solve();
             numSols[i]=solver->nModels;
 
@@ -386,23 +368,17 @@ int main(int argc, char const **argv)
         cnf_t cnf;
         nextFreeVariable = 1;
 
-        vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));
-        vector<vector<vector<lit_t>>> cycset_lits_ord = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));   
-        vector<vector<lit_t>> ybe_left_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-        vector<vector<lit_t>> ybe_right_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size*problem_size, 0));
-        vector<vector<lit_t>> ybe_lits = vector<vector<lit_t>>(t, vector<lit_t>(problem_size, 0));
+        vector<vector<vector<lit_t>>> cycset_lits = vector<vector<vector<lit_t>>>(problem_size, vector<vector<lit_t>>(problem_size, vector<lit_t>(problem_size, 0)));  
 
         encodeEntries(&cnf, diagonal, nextFreeVariable, cycset_lits);
         
-        YBEClauses(&cnf, diagonal, nextFreeVariable, cycset_lits,ybe_left_lits,ybe_right_lits,ybe_lits);
+        YBEClausesNew(&cnf,nextFreeVariable,cycset_lits,diagonal);
 
         if(fixedRow>0){
             fixFirstRow(&cnf,cycset_lits,firstRow);
         } else if(fixedRow<0){
             unfixFirstRow(&cnf,cycset_lits,firstRow);
         }
-
-        //encodeOrder(&cnf, diagonal, nextFreeVariable, cycset_lits_ord, cycset_lits);
 
         // check if zero literal
         for (auto clause : cnf)
@@ -421,7 +397,7 @@ int main(int argc, char const **argv)
                 highestVariable = max(highestVariable, abs(lit));
         }
 
-        solver = new CadicalSolver(cnf, highestVariable, diagonal, firstRow, cycset_lits, cycset_lits_ord, stats);
+        solver = new CadicalSolver(cnf, highestVariable, diagonal, firstRow, cycset_lits, stats);
         solver->solve();
         totalModels=solver->nModels;
 
