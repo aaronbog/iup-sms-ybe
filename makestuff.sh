@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd cadical-user-propagation
+cd cadical-master
 rm -r ./build/
 ./configure -l
 cd ./build/

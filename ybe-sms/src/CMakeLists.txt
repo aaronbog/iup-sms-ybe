@@ -1,5 +1,5 @@
 add_executable(ybe_sms "main.cpp" "clause.cpp"  "domains.cpp" "useful.cpp" "solveCadicalClass.cpp" "solveGeneral.cpp" "minCheckCommon.cpp" "minCheck_V2.cpp") 
-target_link_libraries(ybe_sms PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../cadical-user-propagation/build/libcadical.a")
+target_link_libraries(ybe_sms PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../cadical-master/build/libcadical.a")
 
 include_directories(${Boost_INCLUDE_DIRS}) 
 target_link_libraries(ybe_sms PRIVATE ${Boost_LIBRARIES})
