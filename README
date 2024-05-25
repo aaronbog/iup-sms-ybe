@@ -4,7 +4,7 @@ This folder contains:
 
 0. Unzip the included zip files into one folder.
 
-1. Execute ./makestuff or
+1. Execute ./buildYBESMS.sh or
 
 
 1.a  CaDiCaL with IPASIRUP:
@@ -12,7 +12,7 @@ This folder contains:
 The solver can be found in the folder 'cadical-user-propagation'.
 To configure and build CaDiCaL with user propagators simply run:
 
-    cd cadical-user-propagation/
+    cd cadical-master/
     ./configure
     make
 
