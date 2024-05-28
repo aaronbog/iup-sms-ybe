@@ -25,6 +25,8 @@ using namespace chrono;
 typedef int lit_t;
 typedef vector<lit_t> clause_t;
 typedef vector<clause_t> cnf_t;
+typedef vector<vector<vector<lit_t>>> matrixLits_t;
+typedef vector<vector<vector<vector<lit_t>>>> ybeLits_t;
 
 void printCnf(cnf_t *cnf);
 

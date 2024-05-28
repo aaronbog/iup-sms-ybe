@@ -29,6 +29,7 @@ bool CommonInterface::propagate()
 
 bool CommonInterface::checkMin(bool final)
 {
+
   auto start = steady_clock::now();
   bool res = true;
   cycle_set_t cycset = getCycleSet();
@@ -65,6 +66,10 @@ bool CommonInterface::checkMin(bool final)
     addClause(c,true);
     res=false;
     failed=true;
+    if(mincheck->final)
+      stats.FullCheckSucc+=1LL;
+    else
+      stats.PartCheckSucc+=1LL;
   }
   catch (vector<clause_t> cs)
   {
@@ -74,6 +79,10 @@ bool CommonInterface::checkMin(bool final)
     //}
     res=false;
     failed=true;
+    if(mincheck->final)
+      stats.FullCheckSucc+=1LL;
+    else
+      stats.PartCheckSucc+=1LL;
   } 
   catch (LimitReachedException)
   {
@@ -99,20 +108,36 @@ bool CommonInterface::checkMin(bool final)
       }
     addClause(clause, false);
     res=false;
+    stats.FullCheckFail+=1LL;
   }
 
-  stats.timeMinimalityCheck += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+  if(res && !mincheck->final){
+    stats.PartCheckFail+=1LL;
+    //printf("NIET GEBRUIKT!!!!!!!!!!!!!!!!!!!!!!\n");
+    //printDomains(cycset);
+    //printf("\n\n");
+  }
+
+  auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+  stats.timeMinimalityCheck += dur;
+  if(mincheck->final){
+    stats.timeFullMinimalityCheck+=dur;
+    stats.callsFullCheck+=1LL;
+  }
+  else{
+    stats.timePartMinimalityCheck+=dur;
+    stats.callsPartCheck+=1LL;
+  }
   return res;
 }
 
 bool CommonInterface::check()
 {
   auto start = steady_clock::now();
-  
   bool res=checkMin(true);
 
   stats.timePropagator += ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
-  stats.callsCheck+=1LL;
+  
 
   if(!res)
     return false;
@@ -126,42 +151,20 @@ bool CommonInterface::check()
 
   if (allModels)
   {
-    // exclude current graph
+    // exclude current cycle set
     vector<lit_t> clause;
-    /* printf("------------------\n");
-    printCycleSet(cycset); */
     for (int i = 0; i < problem_size; i++)
       for (int j = 0; j < problem_size; j++)
       {
         if(diagPart && i==j)
               continue;
-        /* bool containsDec = false;
-        int posLit = 0; */
         for (int k = 0; k < problem_size; k++)
         {
-          //if(!containsDec && is_decision(cycset_lits[i][j][k]))
-            //containsDec=true;
           if (cycset.assignments[i][j][k] == True_t){
-            //posLit=cycset_lits[i][j][k];
-            //printf("%d = M_%d,%d,%d\n",posLit, i,j,k);
             clause.push_back(-cycset_lits[i][j][k]);
           }
-          //We can only add the positive lits, the negations are implied.
-          //This makes the added clauses smaller.
-          //Only adding the decision lits does not work somehow...
-          /* if (cs.assignments[i][j][k] == False_t){
-            clause.push_back(cycset_lits[i][j][k]);
-          } */
         }
-        /* if(containsDec){
-          clause.push_back(-posLit);
-        } */
       }
-    //printf("EXCLUDED SOL\n");
-    /* for(auto i:clause){
-      printf("%d or ",i);
-    }
-    printf("\n"); */
     addClause(clause, false);
     return false;
   }
@@ -171,10 +174,18 @@ bool CommonInterface::check()
 void CommonInterface::printStatistics()
 {
   printf("Time in propagator: %f\n", (stats.timePropagator));
-  printf("Time in minimality check: %f\n", (stats.timeMinimalityCheck));
-  printf("Calls of check: %lld\n", stats.callsCheck);
   printf("Calls propagator: %lld\n", stats.callsPropagator);
+  printf("Time in minimality check: %f\n", (stats.timeMinimalityCheck));
+  printf("Calls minimality check: %lld\n", (stats.callsFullCheck+stats.callsPartCheck));
   printf("Number of symmetry breaking constraints: %lld\n", stats.nSymBreakClauses);
+  printf("Time in minimality check -- Partial: %f\n", (stats.timePartMinimalityCheck));
+  printf("Calls of part check: %lld\n", stats.callsPartCheck);
+  printf("Calls of part check - sbc added: %lld\n", stats.PartCheckSucc);
+  printf("Calls of part check - nothing added: %lld\n", stats.PartCheckFail);
+  printf("Time in minimality check -- Full: %f\n", (stats.timeFullMinimalityCheck));
+  printf("Calls of full check: %lld\n", stats.callsFullCheck);
+  printf("Calls of full check - sbc added: %lld\n", stats.FullCheckSucc);
+  printf("Calls of full check - nothing added: %lld\n", stats.FullCheckFail);
   if (allModels)
     printf("Number of models: %d\n", nModels);
 }
