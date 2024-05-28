@@ -23,12 +23,17 @@ extern int logging;
 typedef struct
 {
     chrono::_V2::steady_clock::time_point start;
-    double timePropagator;
-    double timeMinimalityCheck;
-    double timeMinCheckSwap;
-    double timeCheckFullGraphs;
+    double timePropagator=0.0;
+    double timeMinimalityCheck=0.0;
     long long callsPropagator=0;
-    long long callsCheck=0;
+    double timeFullMinimalityCheck = 0.0;
+    long long callsFullCheck=0;
+    long long FullCheckSucc=0;
+    long long FullCheckFail=0;
+    double timePartMinimalityCheck = 0.0;
+    long long callsPartCheck=0;
+    long long PartCheckSucc=0;
+    long long PartCheckFail=0;
     long long nSymBreakClauses=0; // number of symmetry breaking clauses
     long long hyperclauses=0;
 } statistics;
