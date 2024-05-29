@@ -59,6 +59,7 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
             
             int minog = cycset.bitdomains[r][c].firstel;
             bool minOgFixed=cycset.matrix[r][c]!=-1;
+
             vector<int> permVal = cycset.bitdomains[perm[r]][perm[c]].options();
             int pv=-1;
             int inv=-1;
@@ -69,6 +70,8 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
 
             if(permVal.size()==1){
                 if(inv<minog){
+                    addClauses(perm,r,c,oldBreakingClauses);
+                }else if(!minOgFixed&&propagateMincheck&&inv==minog) {
                     addClauses(perm,r,c,oldBreakingClauses);
                 } else if (inv==minog){
                     continue;
@@ -82,7 +85,9 @@ int MinCheckCommon::permFullyDefinedCheck(vector<int> &perm, int i, int j){
                     invpermvals.push_back(invperm[p]);
                 }
                 int max = *max_element(invpermvals.begin(),invpermvals.end());
-                if(max<minog || (max<=minog && propagateMincheck)){
+                if(max<minog){
+                    addClauses(perm,r,c,oldBreakingClauses);
+                } else if(propagateMincheck&&max==minog) {
                     addClauses(perm,r,c,oldBreakingClauses);
                 } else {
                     fixes=-1;
@@ -281,10 +286,18 @@ void MinCheckCommon::addToClause(int r, int c, int lit, vector<bitdomains2_t> &l
                 if(i!=lit && i!=cycset.matrix[r][r]){
                     lits[r].set(c,i);
                 }
-            } else {   
+                if(i!=c && i!=cycset.matrix[c][c]){
+                    lits[r].reset(i,lit);
+                }
+            }
+             else {   
                 if(i!=lit){
                     lits[r].set(c,i);
                 }
+                if(i!=c){
+                    lits[r].reset(i,lit);
+                }
+
             }
         }
     } else {

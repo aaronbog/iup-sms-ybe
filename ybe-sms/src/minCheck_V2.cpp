@@ -96,6 +96,7 @@ bool MinCheck_V2::propagateDecision(shared_ptr<pperm_common> perm, int r){
     auto cycle_og = diag.cycle(r);
 
     //ensure cycles match == ensure diag is fixed
+    
 
     if(dec==r){
         for(int i=1; i<cycle_og.size(); i++){
@@ -159,18 +160,19 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
         }
         else
             copyPerm = perm;
+        
         int minog = cycset.bitdomains[0][r].firstel;
         bool minOgFixed=cycset.matrix[0][r]!=-1;
 
-        vector<int> permVal = cycset.bitdomains[copyPerm->permOf(0)][copyPerm->permOf(r)].options();
+        auto permVal = cycset.bitdomains[copyPerm->permOf(0)][copyPerm->permOf(r)];
         int pv=-1;
         int inv=-1;
-        if(permVal.size()==1){
-            pv=permVal[0];
+        if(permVal.numTrue==1){
+            pv=permVal.firstel;
             inv=copyPerm->invPermOf(pv);
         }
 
-        if(permVal.size()==1){
+        if(permVal.numTrue==1){
             if(inv!=-1){
                 if(inv<minog){
                     extendPerm(copyPerm);
@@ -204,7 +206,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
 
             vector<int> alreadyDefined = vector<int>();
             
-            for(auto pv : permVal){
+            for(auto pv : permVal.options()){
                 auto iopt = copyPerm->invOptions(pv);
                 if(iopt.size()==1){
                     alreadyDefined.push_back(iopt[0]);
@@ -221,7 +223,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
                 }
             }
 
-            if(alreadyDefined.size()==permVal.size()){
+            if(alreadyDefined.size()==permVal.numTrue){
                 if(max<minog){
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
@@ -230,11 +232,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } /* else if(min<minog && propagateMincheck){
-                    extendPerm(copyPerm);
-                    vector<int> p = copyPerm->getPerm();
-                    addClauses(p,0,r,oldBreakingClauses);
-                }  */else if (minog==max) {
+                } else if (minog==max) {
                     options_prop.push_back(copyPerm);
                 }
                 break;
