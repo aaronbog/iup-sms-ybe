@@ -29,6 +29,7 @@ bool smallerEncoding=false;
 bool minCheckOld = false;
 bool useBit = false;
 bool useRange = false;
+bool noCommander = false;
 int logging = 0;
 
 string solOutput = "";
@@ -106,6 +107,12 @@ int main(int argc, char const **argv)
         if (strcmp("--useBit", argv[i]) == 0)
             {
                 useBit = true;
+                continue;
+            }
+
+        if (strcmp("--noCommander", argv[i]) == 0)
+            {
+                noCommander = true;
                 continue;
             }
 

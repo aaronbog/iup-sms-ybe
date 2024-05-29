@@ -115,8 +115,7 @@ void exactlyOne(cnf_t *cnf, vector<int> eo, int &nextFree)
         if(i!=0)
             toEO.push_back(i);
     }
-    if(toEO.size()<=6)
-    {
+    if(noCommander){
         atMostOne(cnf, toEO);
         atLeastOne(cnf, toEO);
     }

@@ -48,6 +48,7 @@ extern bool oldBreakingClauses;
 extern string solOutput;
 extern bool saveState;
 extern bool readState;
+extern bool noCommander;
 
 extern string proofFile;
 
