@@ -162,7 +162,7 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
             copyPerm = perm;
         
         int minog = cycset.bitdomains[0][r].firstel;
-        bool minOgFixed=cycset.matrix[0][r]!=-1;
+        bool minOgFixed=cycset.bitdomains[0][r].numTrue==1;
 
         auto permVal = cycset.bitdomains[copyPerm->permOf(0)][copyPerm->permOf(r)];
         int pv=-1;
@@ -178,79 +178,104 @@ void MinCheck_V2::filterOptions(shared_ptr<pperm_common> perm, vector<int> &opti
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } else if (inv==minog){
+                } else if (minOgFixed && inv==minog){
                     options_prop.push_back(copyPerm);
-                }
+                } else if (propagateMincheck && inv==minog){
+                    extendPerm(copyPerm);
+                    vector<int> p = copyPerm->getPerm();
+                    addClauses(p,0,r,oldBreakingClauses);
+                } 
             } else {
                 vector<int> opt = copyPerm->invOptions(pv);
-                int m = *min_element(opt.begin(),opt.end());
-                if(m<minog){
-                    fixAndPropagate(copyPerm,m,pv);
+                int inv = *min_element(opt.begin(),opt.end());
+                if(inv<minog){
+                    fixAndPropagate(copyPerm,inv,pv);
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } else if(m<=minog && !minOgFixed && propagateMincheck){
-                    fixAndPropagate(copyPerm,m,pv);
-                    extendPerm(copyPerm);
-                    vector<int> p = copyPerm->getPerm();
-                    addClauses(p,0,r,oldBreakingClauses);
-                } else if (m==minog && minOgFixed){
-                    fixAndPropagate(copyPerm,m,pv);
+                } else if (minOgFixed && inv==minog){
+                    fixAndPropagate(copyPerm,inv,pv);
                     options_prop.push_back(copyPerm);
+                } else if(propagateMincheck && inv==minog){
+                    fixAndPropagate(copyPerm,inv,pv);
+                    extendPerm(copyPerm);
+                    vector<int> p = copyPerm->getPerm();
+                    addClauses(p,0,r,oldBreakingClauses);
                 }
             }
 
         } else {
-            int max = -1;
+            int maxel = -1;
             int maxi = -1;
 
             vector<int> alreadyDefined = vector<int>();
             
             for(auto pv : permVal.options()){
                 auto iopt = copyPerm->invOptions(pv);
-                if(iopt.size()==1){
-                    alreadyDefined.push_back(iopt[0]);
-                    if(iopt[0]>max){
-                        max=iopt[0];
+                if(copyPerm->permOf(0)==0 && copyPerm->permOf(r)==r){
+                    if(iopt.size()==1){
+                        if(iopt[0]<pv){
+                            extendPerm(copyPerm);
+                            vector<int> p = copyPerm->getPerm();
+                            addClauses(p,0,r,oldBreakingClauses);
+                        } else
+                            continue;
+                    } else {
+                        int newmin = *min_element(iopt.begin(),iopt.end());
+                        if(newmin<pv){
+                            fixAndPropagate(copyPerm,newmin,pv);
+                            extendPerm(copyPerm);
+                            vector<int> p = copyPerm->getPerm();
+                            addClauses(p,0,r,oldBreakingClauses);
+                        } else
+                            continue;
                     }
-                    continue;
                 } else {
-                    int newmax = *max_element(iopt.begin(),iopt.end());
-                    if(newmax>max){
-                        max=newmax;
-                        maxi=pv;
+                    if(iopt.size()==1){
+                        alreadyDefined.push_back(iopt[0]);
+                        maxel=max(maxel,iopt[0]);
+                        continue;
+                    } else {
+                        int newmax = *max_element(iopt.begin(),iopt.end());
+                        if(newmax>maxel){
+                            maxel=newmax;
+                            maxi=pv;
+                        }
                     }
                 }
             }
 
+            if(copyPerm->permOf(0)==0 && copyPerm->permOf(r)==r)
+                break;
+
             if(alreadyDefined.size()==permVal.numTrue){
-                if(max<minog){
+                if(maxel<minog){
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } else if(max<=minog && propagateMincheck){
-                    extendPerm(copyPerm);
-                    vector<int> p = copyPerm->getPerm();
-                    addClauses(p,0,r,oldBreakingClauses);
-                } else if (minog==max) {
+                } else if (!propagateMincheck && minog==maxel) {
                     options_prop.push_back(copyPerm);
+                }else if(propagateMincheck && minog==maxel){
+                    extendPerm(copyPerm);
+                    vector<int> p = copyPerm->getPerm();
+                    addClauses(p,0,r,oldBreakingClauses);
                 }
                 break;
             } else {
-                if(max<minog){
-                    fixAndPropagate(copyPerm,max,maxi);
+                if(maxel<minog){
+                    fixAndPropagate(copyPerm,maxel,maxi);
                     extendPerm(copyPerm);
                     vector<int> p = copyPerm->getPerm();
                     addClauses(p,0,r,oldBreakingClauses);
-                } else if(max<=minog && propagateMincheck){
-                    fixAndPropagate(copyPerm,max,maxi);
-                    extendPerm(copyPerm);
-                    vector<int> p = copyPerm->getPerm();
-                    addClauses(p,0,r,oldBreakingClauses);
-                } else if(minog==max){
-                    fixAndPropagate(copyPerm,max,maxi);
+                } else if(!propagateMincheck && minog==maxel){
+                    fixAndPropagate(copyPerm,maxel,maxi);
                     options_prop.push_back(copyPerm);
-                }
+                }else if(propagateMincheck && minog==maxel){
+                    fixAndPropagate(copyPerm,maxel,maxi);
+                    extendPerm(copyPerm);
+                    vector<int> p = copyPerm->getPerm();
+                    addClauses(p,0,r,oldBreakingClauses);
+                } 
                 break;
             }
         }
