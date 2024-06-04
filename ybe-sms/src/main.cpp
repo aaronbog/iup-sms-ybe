@@ -16,6 +16,7 @@ clock_t startOfSolving;
 bool allModels = false;
 bool diagPart = false;
 int fixedRow = 0;
+int numToFix = 0;
 bool parallel = false;
 bool propagateMincheck = false;
 bool oldBreakingClauses = false;
@@ -158,13 +159,21 @@ int main(int argc, char const **argv)
         if(strcmp("--fixFR", argv[i])==0)
             {
                 fixedRow=1;
-                continue;
+                i++;
+                if(atoi(argv[i])>0){
+                    numToFix = atoi(argv[i]);
+                    continue;
+                }
             }
 
         if(strcmp("--unfixFR", argv[i])==0)
             {
                 fixedRow=-1;
-                continue;
+                i++;
+                if(atoi(argv[i])>0){
+                    numToFix = atoi(argv[i]);
+                    continue;
+                }
             }
 
         if (strcmp("--maxDepth", argv[i]) == 0)
@@ -369,9 +378,9 @@ int main(int argc, char const **argv)
         YBEClausesNew(&cnf,nextFreeVariable,cycset_lits,diagonal);
 
         if(fixedRow>0){
-            fixFirstRow(&cnf,cycset_lits,firstRow);
+            fixFirstRows(&cnf,cycset_lits,firstRow,numToFix);
         } else if(fixedRow<0){
-            unfixFirstRow(&cnf,cycset_lits,firstRow);
+            unfixFirstRows(&cnf,cycset_lits,firstRow,numToFix);
         }
 
         // check if zero literal

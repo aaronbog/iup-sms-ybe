@@ -343,34 +343,26 @@ void YBEClausesNew(cnf_t *cnf, int &nextFree, matrixLits_t &cycset_lits, vector<
     }
 }
 
-void fixFirstRow(cnf_t *cnf, matrixLits_t &cycset_lits, vector<int> firstRow){
-    for(int i=0;i<problem_size;i++){
-        if(diagPart && i==0)
-            continue;
-        clause_t cl;
-        cl.push_back(cycset_lits[0][i][firstRow[i]]);
-        cnf->push_back(cl);
-    }
-    for(int i=0;i<problem_size;i++){
-        if(diagPart && i==1)
-            continue;
-        clause_t cl;
-        cl.push_back(cycset_lits[1][i][firstRow[i]]);
-        cnf->push_back(cl);
+void fixFirstRows(cnf_t *cnf, matrixLits_t &cycset_lits, vector<int> firstRow, int n){
+    for(int j = 0; j<n; j++){
+        for(int i=0;i<problem_size;i++){
+            if(diagPart && i==j)
+                continue;
+            clause_t cl;
+            cl.push_back(cycset_lits[j][i][firstRow[i]]);
+            cnf->push_back(cl);
+        }
     }
 }
 
-void unfixFirstRow(cnf_t *cnf, matrixLits_t &cycset_lits, vector<int> firstRow){
+void unfixFirstRows(cnf_t *cnf, matrixLits_t &cycset_lits, vector<int> firstRow, int n){
     clause_t cl;
-    for(int i=0;i<problem_size;i++){
-        if(diagPart && i==0)
-            continue;
-        cl.push_back(-cycset_lits[0][i][firstRow[i]]);
-    }
-    for(int i=0;i<problem_size;i++){
-        if(diagPart && i==1)
-            continue;
-        cl.push_back(-cycset_lits[1][i][firstRow[i]]);
+    for(int j=0;j<n;j++){
+        for(int i=0;i<problem_size;i++){
+            if(diagPart && i==j)
+                continue;
+            cl.push_back(-cycset_lits[j][i][firstRow[i]]);
+        }
     }
     cnf->push_back(cl);
 }
