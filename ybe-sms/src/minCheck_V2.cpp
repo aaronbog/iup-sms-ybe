@@ -61,18 +61,12 @@ void MinCheck_V2::checkMinimality(shared_ptr<pperm_common> perm, int r, int d){
         perm->print();
     }
     its++;
-    if(!final && (its>maxMC || d>maxDepth)){
+    if(!final && (its>=maxMC)){
         throw LimitReachedException();
     }
     vector<shared_ptr<pperm_common>> propagated_options = vector<shared_ptr<pperm_common>>();
     auto options = perm->options(r);
     filterOptions(perm, options, r, propagated_options);
-
-    while(propagated_options.size()>maxBreadth){
-        int i = (rand()%propagated_options.size())+0;
-        swap(propagated_options[i],propagated_options.back());
-        propagated_options.pop_back();
-    }
 
     //depth first
     for(auto option : propagated_options){
@@ -83,10 +77,17 @@ void MinCheck_V2::checkMinimality(shared_ptr<pperm_common> perm, int r, int d){
         }
         
         if(r<problem_size-1){
-            if(options.size()>0)
-                checkMinimality(option,r+1,d+1);
-            else
-                checkMinimality(option,r+1,d);
+            if(!final){
+                if(options.size()>0 && d+1<=maxDepth)
+                    checkMinimality(option,r+1,d+1);
+                else if(options.size()==0)
+                    checkMinimality(option,r+1,d);
+            } else {
+                if(options.size()>0)
+                    checkMinimality(option,r+1,d+1);
+                else
+                    checkMinimality(option,r+1,d);
+            }
         }
     }
 }

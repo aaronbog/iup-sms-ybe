@@ -66,10 +66,15 @@ bool CommonInterface::checkMin(bool final)
     addClause(c,true);
     res=false;
     failed=true;
-    if(mincheck->final)
+    if(mincheck->final){
+      auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+      stats.FullCheckSuccTime += dur;
       stats.FullCheckSucc+=1LL;
-    else
+    } else {
+      auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+      stats.PartCheckSuccTime += dur;
       stats.PartCheckSucc+=1LL;
+    }
   }
   catch (vector<clause_t> cs)
   {
@@ -79,10 +84,15 @@ bool CommonInterface::checkMin(bool final)
     //}
     res=false;
     failed=true;
-    if(mincheck->final)
+    if(mincheck->final){
+      auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+      stats.FullCheckSuccTime += dur;
       stats.FullCheckSucc+=1LL;
-    else
+    } else {
+      auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+      stats.PartCheckSuccTime += dur;
       stats.PartCheckSucc+=1LL;
+    }
   } 
   catch (LimitReachedException)
   {
@@ -109,13 +119,14 @@ bool CommonInterface::checkMin(bool final)
     addClause(clause, false);
     res=false;
     stats.FullCheckFail+=1LL;
+    auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+    stats.FullCheckFailTime += dur;
   }
 
   if(res && !mincheck->final){
     stats.PartCheckFail+=1LL;
-    //printf("NIET GEBRUIKT!!!!!!!!!!!!!!!!!!!!!!\n");
-    //printDomains(cycset);
-    //printf("\n\n");
+    auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
+    stats.PartCheckFailTime += dur;
   }
 
   auto dur = ((duration_cast<nanoseconds>(steady_clock::now()-start).count()) / 1000000000.0);
@@ -175,17 +186,24 @@ void CommonInterface::printStatistics()
 {
   printf("Time in propagator: %f\n", (stats.timePropagator));
   printf("Calls propagator: %lld\n", stats.callsPropagator);
+
   printf("Time in minimality check: %f\n", (stats.timeMinimalityCheck));
   printf("Calls minimality check: %lld\n", (stats.callsFullCheck+stats.callsPartCheck));
   printf("Number of symmetry breaking constraints: %lld\n", stats.nSymBreakClauses);
+
   printf("Time in minimality check -- Partial: %f\n", (stats.timePartMinimalityCheck));
   printf("Calls of part check: %lld\n", stats.callsPartCheck);
   printf("Calls of part check - sbc added: %lld\n", stats.PartCheckSucc);
   printf("Calls of part check - nothing added: %lld\n", stats.PartCheckFail);
+  printf("Time of part check - sbc added: %f\n", (stats.PartCheckSuccTime));
+  printf("Time of part check - nothing added: %f\n", (stats.PartCheckFailTime));
+
   printf("Time in minimality check -- Full: %f\n", (stats.timeFullMinimalityCheck));
   printf("Calls of full check: %lld\n", stats.callsFullCheck);
   printf("Calls of full check - sbc added: %lld\n", stats.FullCheckSucc);
   printf("Calls of full check - nothing added: %lld\n", stats.FullCheckFail);
+  printf("Time of full check - sbc added: %f\n", (stats.FullCheckSuccTime));
+  printf("Time of full check - nothing added: %f\n", (stats.FullCheckFailTime));
   if (allModels)
     printf("Number of models: %d\n", nModels);
 }

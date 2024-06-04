@@ -22,7 +22,6 @@ bool oldBreakingClauses = false;
 bool propagateLiteralsCadical = false;
 bool checkSolutionInProp = false;
 int maxDepth = INT_MAX;
-int maxBreadth = INT_MAX;
 int maxMC = INT_MAX;
 bool doFinalCheck=false;
 bool smallerEncoding=false;
@@ -188,18 +187,6 @@ int main(int argc, char const **argv)
                     continue;
                 } else {
                     printf("ERROR: invalid argument, max iterations needs to be a positive number.");
-                    EXIT_UNWANTED_STATE;
-                }
-            }
-
-        if (strcmp("--maxBreadth", argv[i]) == 0)
-            {
-                i++;
-                if(atoi(argv[i])>0){
-                    maxDepth = atoi(argv[i]);
-                    continue;
-                } else {
-                    printf("ERROR: invalid argument, maxBreadth needs to be a positive number.");
                     EXIT_UNWANTED_STATE;
                 }
             }

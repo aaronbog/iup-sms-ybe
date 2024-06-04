@@ -10,8 +10,6 @@ extern int fixedRow;
 extern int problem_size;
 extern int checkFreq;
 extern int maxDepth;
-extern int maxBreadth;
-extern int maxDepth;
 extern int maxMC;
 extern bool doFinalCheck;
 extern bool useBit;
@@ -30,10 +28,14 @@ typedef struct
     long long callsFullCheck=0;
     long long FullCheckSucc=0;
     long long FullCheckFail=0;
+    double FullCheckSuccTime=0.0;
+    double FullCheckFailTime=0.0;
     double timePartMinimalityCheck = 0.0;
     long long callsPartCheck=0;
     long long PartCheckSucc=0;
     long long PartCheckFail=0;
+    double PartCheckSuccTime = 0.0;
+    double PartCheckFailTime = 0.0;
     long long nSymBreakClauses=0; // number of symmetry breaking clauses
     long long hyperclauses=0;
 } statistics;
