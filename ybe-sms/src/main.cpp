@@ -12,6 +12,7 @@
 int nextFreeVariable;
 int problem_size = 3;
 int checkFreq = 40;
+int timelimit = -1;
 clock_t startOfSolving;
 bool allModels = false;
 bool diagPart = false;
@@ -64,6 +65,13 @@ int main(int argc, char const **argv)
         {
             i++;
             problem_size = atoi(argv[i]);
+            continue;
+        }
+
+        if (strcmp("--time", argv[i]) == 0 || strcmp("-t", argv[i]) == 0)
+        {
+            i++;
+            timelimit = atoi(argv[i]);
             continue;
         }
 

@@ -42,6 +42,7 @@ typedef struct
 
 extern const char **optionsClingo;
 extern int nOptionsClingo;
+extern int timelimit;
 extern bool propagateLiteralsCadical;
 extern bool checkSolutionInProp;
 extern bool smallerEncoding;

@@ -320,6 +320,11 @@ public:
 
     int cb_propagate()
     {
+        if(timelimit>0 && (duration_cast<seconds>(steady_clock::now()-stats.start).count())>timelimit){
+            printf("TIME LIMIT!!!!!\n");
+            solver->terminate();
+            return 0;
+        }
         // PRINT_CURRENT_LINE
         if (!propagateLiteralsCadical)
             return 0;
